@@ -1,7 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>main.qml</file>
-        <file>basic.frag</file>
-        <file>basic.vert</file>
-    </qresource>
-</RCC>
