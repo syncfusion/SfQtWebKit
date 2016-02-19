@@ -1,4 +1,4 @@
-/*
+ /*................\\\\\\\\\\\\\\\\.................
  * Copyright (C) 2007 Alp Toker <alp@atoker.com>
  * Copyright (C) 2007 Apple Inc.
  *
@@ -23,6 +23,7 @@
 
 #include <wtf/Forward.h>
 #include <wtf/Vector.h>
+#include <qsize.h>
 
 namespace WebCore {
 
@@ -58,7 +59,7 @@ public:
 
     // Enter print mode, updating layout for new page size.
     // This function can be called multiple times to apply new print options without going back to screen mode.
-    void begin(float width, float height = 0);
+    IntRect begin(float width, float height = 0);
 
     // FIXME: eliminate width argument.
     void spoolPage(GraphicsContext& ctx, int pageNumber, float width);
@@ -78,6 +79,8 @@ public:
     // The height of the graphics context should be
     // (pageSizeInPixels.height() + 1) * number-of-pages - 1
     static void spoolAllPagesWithBoundaries(Frame*, GraphicsContext&, const FloatSize& pageSizeInPixels);
+	
+	static QSize ViewportToPdf;
 
 protected:
     Frame* m_frame;

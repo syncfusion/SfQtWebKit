@@ -1,4 +1,4 @@
-/*
+ /*
     Copyright (C) 2008,2009 Nokia Corporation and/or its subsidiary(-ies)
     Copyright (C) 2007 Staikos Computing Services Inc.
 
@@ -27,7 +27,11 @@
 #include <QtGui/qicon.h>
 #include <QtNetwork/qnetworkaccessmanager.h>
 #include <QtWebKit/qwebkitglobal.h>
-
+#include <Windows.h>
+#include <QtWebKit/qwebelement.h>
+//#include <PageClientQt.h>
+//#include <RenderObject.h>
+//#include <QtScript/qscriptengine.h>
 QT_BEGIN_NAMESPACE
 class QRect;
 class QPoint;
@@ -39,7 +43,9 @@ class QNetworkRequest;
 class QRegion;
 class QPrinter;
 QT_END_NAMESPACE
-
+#ifndef QT_NO_PRINTER
+class QWebPrinterPrivate;
+#endif
 class QWebNetworkRequest;
 class QWebFrameAdapter;
 class QWebFramePrivate;
@@ -58,6 +64,7 @@ namespace WebCore {
     class FrameLoaderClientQt;
     class ChromeClientQt;
     class TextureMapperLayerClientQt;
+    class IntRect;
 }
 class QWebFrameData;
 class QWebHitTestResultPrivate;
@@ -79,10 +86,7 @@ public:
 
     QString linkText() const;
     QUrl linkUrl() const;
-#if QT_DEPRECATED_SINCE(5,5)
-    QT_DEPRECATED QUrl linkTitle() const;
-#endif // QT_DEPRECATED_SINCE(5,5)
-    QString linkTitleString() const;
+    QUrl linkTitle() const;
     QWebFrame *linkTargetFrame() const;
     QWebElement linkElement() const;
 
@@ -107,6 +111,18 @@ private:
     friend class QWebPagePrivate;
     friend class QWebPage;
 };
+#ifndef QT_NO_PRINTER
+class QWebPrinter {
+public:
+    QWebPrinter();
+    ~QWebPrinter();
+//    void spoolPage(int i) const;
+//    QPainter * painter();
+//    int pageCount() const;
+//    QPair<int, QRectF> elementLocation(const QWebElement & e) const;
+    QWebPrinterPrivate * d;
+};
+#endif
 
 class QWEBKITWIDGETS_EXPORT QWebFrame : public QObject {
     Q_OBJECT
@@ -124,7 +140,7 @@ private:
     QWebFrame(QWebPage *parentPage);
     QWebFrame(QWebFrame* parent, QWebFrameData*);
     ~QWebFrame();
-
+	//int totalPageLayoutSize;
 public:
     enum ValueOwnership {
         QtOwnership,
@@ -132,8 +148,8 @@ public:
         AutoOwnership
     };
 
+    //int GetTotalPageLayoutSize() const { return totalPageLayoutSize; }
     QWebPage *page() const;
-
     void load(const QUrl &url);
     void load(const QNetworkRequest &request, QNetworkAccessManager::Operation operation = QNetworkAccessManager::GetOperation, const QByteArray &body = QByteArray());
     void setHtml(const QString &html, const QUrl &baseUrl = QUrl());
@@ -142,7 +158,8 @@ public:
     void addToJavaScriptWindowObject(const QString &name, QObject *object, ValueOwnership ownership = QtOwnership);
     QString toHtml() const;
     QString toPlainText() const;
-
+    QString m_str;
+    //QPair<int, QRectF> QGetRectangle(const QWebFrame *frame, QPaintDevice *printer, QPainter &painter,const QWebElement & e);
     QString title() const;
     void setUrl(const QUrl &url);
     QUrl url() const;
@@ -150,7 +167,7 @@ public:
     QUrl baseUrl() const;
     QIcon icon() const;
     QMultiMap<QString, QString> metaData() const;
-
+    QWebPrinter pe;
     QString frameName() const;
 
     QWebFrame *parentFrame() const;
@@ -206,11 +223,14 @@ public:
 
     QWebSecurityOrigin securityOrigin() const;
     QWebFrameAdapter* handle() const;
-
+	//Vector<WebCore::IntRect> m_pageRects;
 public Q_SLOTS:
     QVariant evaluateJavaScript(const QString& scriptSource);
 #ifndef QT_NO_PRINTER
     void print(QPrinter *printer) const;
+    QPair<int, QRectF> GetHyperlinkLocation(QPrinter *printer,const QWebElement & e);
+   // QtPrintContext m_printcontext;
+    void SetPrintContext(QPrinter *printer);
 #endif
 
 Q_SIGNALS:
@@ -236,6 +256,8 @@ private:
     friend class QWebPage;
     friend class QWebPagePrivate;
     friend class QWebFramePrivate;
+    friend class QWebPrinterPrivate;
+    friend class QWebPrinter;
     friend class DumpRenderTreeSupportQt;
     friend class WebCore::WidgetPrivate;
     friend class WebCore::FrameLoaderClientQt;

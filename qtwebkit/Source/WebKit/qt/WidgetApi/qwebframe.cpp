@@ -1,6 +1,6 @@
-/*
+ /*
     Copyright (C) 2008,2009 Nokia Corporation and/or its subsidiary(-ies)
-    Copyright (C) 2007 Staikos Computing Services Inc.
+    Copyright (C) 2007 Staikos Computing Services Inc
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -19,13 +19,86 @@
 */
 
 #include "config.h"
-#include "qwebframe.h"
 
+#include "BridgeJSC.h"
+#include "CallFrame.h"
+#include "Document.h"
+#include "DocumentLoader.h"
+#include "DragData.h"
+#include "Element.h"
+#include "FocusController.h"
+#include "Frame.h"
+#include "FrameLoaderClientQt.h"
+#include "FrameTree.h"
+#include "FrameView.h"
+#include "GCController.h"
+#include "HTMLMetaElement.h"
+#include "HitTestResult.h"
+#include "HTTPParsers.h"
+#include "IconDatabase.h"
+
+#include "InspectorController.h"
+#include "JSDOMBinding.h"
+#include "JSDOMWindowBase.h"
+#include "JSLock.h"
+#include "JSObject.h"
+
+#include "NetworkingContext.h"
+#include "NodeList.h"
+#include "Page.h"
+//#include "PlatformMouseEvent.h"
+//#include "PlatformWheelEvent.h"
+
+#include "PutPropertySlot.h"
+#include "RenderLayer.h"
+#include "RenderTreeAsText.h"
+#include "ScriptController.h"
+#include "ScriptSourceCode.h"
+#include "ScriptValue.h"
+#include "Scrollbar.h"
+#include "Settings.h"
+#include "SubstituteData.h"
+#include "SVGSMILElement.h"
+#include "TiledBackingStore.h"
+#include "htmlediting.h"
+#include "markup.h"
+#include "qt_instance.h"
+#include "qt_runtime.h"
+#include "runtime_object.h"
+#include "runtime_root.h"
+#include "wtf/HashMap.h"
+#include "ColumnInfo.h"
+#include "FloatQuad.h"
+#include "FlowThreadController.h"
+#include "FrameSelection.h"
+#include "HTMLFrameOwnerElement.h"
+#include "HTMLIFrameElement.h"
+#include "RenderGeometryMap.h"
+#include "RenderLayerBacking.h"
+#include "RenderNamedFlowThread.h"
+#include "RenderSelectionInfo.h"
+#include "RenderWidget.h"
+#include "RenderWidgetProtector.h"
+#include "StyleInheritedData.h"
+#include "TransformState.h"
+#include <wtf/StackStats.h>
+#if USE(ACCELERATED_COMPOSITING)
+#include "RenderLayerCompositor.h"
+#endif
+#if ENABLE(CSS_SHADERS) && USE(3D_GRAPHICS)
+#include "CustomFilterGlobalContext.h"
+#endif
+
+#include "qwebframe.h"
+#include "PrintContext.h"
 #include "QtPrintContext.h"
 #include "qwebelement.h"
 #include "qwebframe_p.h"
 #include "qwebpage.h"
 #include "qwebpage_p.h"
+#include "GraphicsContext.h"
+#include "RenderView.h"
+#include "ResourceRequest.h"
 #include "qwebscriptworld.h"
 #include "qwebscriptworld_p.h"
 #include "qwebsecurityorigin.h"
@@ -40,7 +113,7 @@
 #endif
 #include <qnetworkrequest.h>
 #include <qregion.h>
-
+#include "RenderObject.h"
 using namespace WebCore;
 
 // from text/qfont.cpp
@@ -48,6 +121,48 @@ QT_BEGIN_NAMESPACE
 extern Q_GUI_EXPORT int qt_defaultDpi();
 QT_END_NAMESPACE
 
+QWebPrinterPrivate::QWebPrinterPrivate():pageRect()
+{
+
+}
+QWebPrinterPrivate::~QWebPrinterPrivate()
+{
+
+}
+QWebPrinter::QWebPrinter()
+    : d(new QWebPrinterPrivate())
+{
+
+}
+
+QWebPrinter::~QWebPrinter()
+{
+    delete d;
+}
+//QWebPrinterPrivate::QWebPrinterPrivate(const QWebFrame *f, QPaintDevice *printer, QPainter &p)
+//    : printContext(f->d->frame)
+//    , painter(p)
+//    , frame(f)
+//    , graphicsContext(&p)
+//{
+//    const qreal zoomFactorX = printer->logicalDpiX() / qt_defaultDpi();
+//    const qreal zoomFactorY = printer->logicalDpiY() / qt_defaultDpi();
+//    IntRect pageRect(0, 0,
+//                     int(printer->width() / zoomFactorX),
+//                     int(printer->height() / zoomFactorY));
+
+//    printContext.begin(pageRect.width(), pageRect.height());
+//    float pageHeight = 0;
+// //   printContext.computePageRects(pageRect, /* headerHeight */// 0, /* footerHeight */// 0, /* userScaleFactor */// 1.0, //pageHeight);
+
+//    painter.scale(zoomFactorX, zoomFactorY);
+//    printWidth = pageRect.width();
+//}
+
+//QWebPrinterPrivate::~QWebPrinterPrivate()
+//{
+//    printContext.end();
+//}
 void QWebFramePrivate::setPage(QWebPage* newPage)
 {
     if (page == newPage)
@@ -204,7 +319,7 @@ int QWebFramePrivate::scrollBarPolicy(Qt::Orientation orientation) const
 
 QWebFrame::QWebFrame(QWebPage *parentPage)
     : QObject(parentPage)
-    , d(new QWebFramePrivate)
+    , d(new QWebFramePrivate), pe()
 {
     d->page = parentPage;
     d->q = this;
@@ -823,6 +938,175 @@ bool QWebFrame::event(QEvent *e)
 
     \sa render()
 */
+#ifndef QT_NO_PRINTER
+//QWebPrinterPrivate::QWebPrinterPrivate(const QWebFrame *f, QPaintDevice *printer, QPainter &p)
+////    : printContext(f->d->frame)
+////    , painter(p)
+////    , frame(f)
+////    , graphicsContext(&p)
+//{
+////    const qreal zoomFactorX = printer->logicalDpiX() / qt_defaultDpi();
+////    const qreal zoomFactorY = printer->logicalDpiY() / qt_defaultDpi();
+////    IntRect pageRect(0, 0,
+////                     int(printer->width() / zoomFactorX),
+////                     int(printer->height() / zoomFactorY));
+
+////    printContext.begin(pageRect.width(), pageRect.height());
+////    float pageHeight = 0;
+////    printContext.computePageRects(pageRect, /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+
+////    painter.scale(zoomFactorX, zoomFactorY);
+////    printWidth = pageRect.width();
+//}
+
+//QWebPrinterPrivate::~QWebPrinterPrivate()
+//{
+//    //printContext.end();
+//}
+
+/*!
+    \class QWebPrinter
+    \since 4.7
+    \brief The QWebPrinter controls printing of a \l{QWebFrame::}
+
+    \inmodule QtWebKit
+
+    \sa QWebFrame
+*/
+//QWebPrinter::QWebPrinter(const QWebFrame *frame, QPaintDevice *printer, QPainter &painter)
+//    : d(new QWebPrinterPrivate(frame, printer, painter))
+//{}
+
+//QWebPrinter::~QWebPrinter()
+//{
+//    delete d;
+//}
+
+/*!
+    Print a page of the frame. \a i is  the number of the page to print,
+    and must be between 1 and \fn QWebPrinter::pageCount() .
+*/
+//void QWebPrinter::spoolPage(int i) const
+//{
+////    if (i < 1 || i > d->printContext.pageCount())
+////        return;
+////    d->printContext.spoolPage(d->graphicsContext, i - 1, d->printWidth);
+//}
+
+/*!
+    Returns the number of pages of the frame when printed.
+*/
+/*int QWebPrinter::pageCount() const
+{
+    return 1;//d->printContext.pageCount();
+}
+
+QPair<int, QRectF> QWebPrinter::elementLocation(const QWebElement & e) const
+{
+   //Compute a mapping from node to render object once and for all
+    if (d->elementToRenderObject.empty())
+   for (WebCore::RenderObject* o=d->frame->d->frame->document()->renderer(); o; o=o->nextInPreOrder())
+        if (o->node())
+            d->elementToRenderObject[o->node()] = o;
+
+    if (!d->elementToRenderObject.contains(e.m_element))
+        return QPair<int,QRectF>(-1, QRectF());
+    const WebCore::RenderObject * ro = d->elementToRenderObject[e.m_element];
+    const Vector<IntRect> & pageRects = d->printContext.pageRects();
+
+    if (pageRects.size() == 0)
+        return QPair<int,QRectF>(-1, QRectF());
+
+    WebCore::RenderView *root = toRenderView(d->frame->d->frame->document()->renderer());
+    //We need the scale factor, because pages are shrinked
+    float scale = (float)d->printWidth / (float)root->width();
+
+    QRectF r(const_cast<WebCore::RenderObject *>(ro)->absoluteBoundingBoxRect());
+
+    int low=0;
+   int high=pageRects.size();
+    int c = r.y() + r.height() / 2;
+    while(low <= high) {
+        int m = (low+high)/2;
+        if(c < pageRects[m].y())
+	high = m-1;
+        else if(c > pageRects[m].maxY())
+            low = m +1;
+        else {
+            QRectF tr = r.translated(0, -pageRects[m].y());
+            return QPair<int, QRectF>(m+1, QRect(tr.x() * scale, tr.y()*scale, tr.width()*scale, tr.height()*scale));
+        }
+    }
+    return QPair<int,QRectF>(-1, QRectF());
+}
+
+/*!
+    Return the painter used for printing.
+*/
+//QPainter * QWebPrinter::painter() {
+  //  return &d->painter;
+//}
+#endif //QT_NO_PRINTER
+/*
+QWebPrinterPrivate::QWebPrinterPrivate(const QWebFrame *f, QPaintDevice *printer, QPainter &p)
+    : printContext(f->d->frame)
+    , painter(p)
+    , frame(f)
+    , graphicsContext(&p)
+{
+    const qreal zoomFactorX = printer->logicalDpiX() / qt_defaultDpi();
+    const qreal zoomFactorY = printer->logicalDpiY() / qt_defaultDpi();
+    IntRect pageRect(0, 0,
+                     int(printer->width() / zoomFactorX),
+                     int(printer->height() / zoomFactorY));
+
+    printContext.begin(pageRect.width(), pageRect.height());
+    float pageHeight = 0;
+    printContext.computePageRects(pageRect, /* headerHeight 0, /* footerHeight/ 0, /* userScaleFactor  1.0, pageHeight);
+
+    painter.scale(zoomFactorX, zoomFactorY);
+    printWidth = pageRect.width();
+}*/
+void QWebFrame::SetPrintContext(QPrinter *printer)
+{
+    QPainter painter;
+    //painter.begin(printer);
+      //return QPair<int,QRectF>(-1, QRectF());
+
+    const qreal zoomFactorX = (qreal)printer->logicalDpiX() / qt_defaultDpi();
+    const qreal zoomFactorY = (qreal)printer->logicalDpiY() / qt_defaultDpi();
+
+    QRect qprinterRect = printer->pageRect();
+
+    QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
+
+    QtPrintContext printContext(&painter, pageRect, d, false);
+    pe.d->pageRect =  printContext.pageRects();
+    //IntRect rec = pe.d->pageRect[0];
+    //painter.end();
+
+}
+//QtPrintContext m_printContext;
+QPair<int, QRectF> QWebFrame::GetHyperlinkLocation(QPrinter *printer,const QWebElement & e)
+{
+//    QPainter painter;
+//   // if (!painter.begin(printer))
+//     //   return QPair<int,QRectF>(-1, QRectF());
+
+//    const qreal zoomFactorX = (qreal)printer->logicalDpiX() / qt_defaultDpi();
+//    const qreal zoomFactorY = (qreal)printer->logicalDpiY() / qt_defaultDpi();
+
+//    QRect qprinterRect = printer->pageRect();
+//    //QWebPrinter fe();
+
+//    QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
+//    //QtPrintContext printContext =d->m_printContext;
+//    QtPrintContext printContext(&painter, pageRect, d);
+    //Vector<IntRect>& m_pageRects = printContext.pageRects();
+    QPainter painter;
+    QtPrintContext printContext(&painter, d);
+    return printContext.QGetRectangle(d,pe.d->pageRect ,e);
+}
 void QWebFrame::print(QPrinter *printer) const
 {
 #if HAVE(QTPRINTSUPPORT)
@@ -838,7 +1122,25 @@ void QWebFrame::print(QPrinter *printer) const
     QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
 
     QtPrintContext printContext(&painter, pageRect, d);
+    IntRect m_totalPageLayoutSize = printContext.totalPageLayoutSize;
+    QString sc = m_str;
+    std::string filePathString = sc.toStdString();
+    const char * filePath = filePathString.c_str();
+    FILE * pFile;
+    pFile = fopen (filePath,"a+");
+    QString layoutSizeVal =  QString::number(m_totalPageLayoutSize.size().height());
+    std::string layoutSizestring = layoutSizeVal.toStdString();
+    const char * layoutSizechar = layoutSizestring.c_str();
 
+      if (pFile!=NULL)
+      {
+        fputs("TotalLayoutPageSize,",pFile);
+        fputs (layoutSizechar,pFile);
+        fputs("\n",pFile);
+        fclose (pFile);
+      }
+    //totalPageLayoutSize = m_totalPageLayoutSize.size().height();
+    //GetTotalPageLayoutSize();
     int docCopies;
     int pageCopies;
     if (printer->collateCopies()) {
@@ -1001,9 +1303,9 @@ QWebFrame *QWebFramePrivate::kit(const QWebFrameAdapter* frameAdapter)
     \since 4.6
 
     This signal is emitted when a new load of this frame is started.
-
+''''''''''''''''''''''''''
     \sa loadFinished()
-*/
+*
 
 /*!
     \fn void QWebFrame::loadFinished(bool ok)
@@ -1164,29 +1466,13 @@ QUrl QWebHitTestResult::linkUrl() const
     return d->linkUrl;
 }
 
-#if QT_DEPRECATED_SINCE(5,5)
 /*!
-    \obsolete
-    Use linkTitleString instead.
-
     Returns the title of the link.
 */
 QUrl QWebHitTestResult::linkTitle() const
 {
     if (!d)
         return QUrl();
-    return d->linkTitle;
-}
-#endif // QT_DEPRECATED_SINCE(5,5)
-
-/*!
-    \since 5.5
-    Returns the title of the link.
-*/
-QString QWebHitTestResult::linkTitleString() const
-{
-    if (!d)
-        return QString();
     return d->linkTitle;
 }
 
