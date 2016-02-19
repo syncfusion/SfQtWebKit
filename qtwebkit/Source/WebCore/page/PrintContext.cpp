@@ -160,7 +160,7 @@ void PrintContext::computePageRectsWithPageSizeInternal(const FloatSize& pageSiz
     }
 }
 
-void PrintContext::begin(float width, float height)
+IntRect PrintContext::begin(float width, float height)
 {
     // This function can be called multiple times to adjust printing parameters without going back to screen mode.
     m_isPrinting = true;
@@ -169,7 +169,7 @@ void PrintContext::begin(float width, float height)
     FloatSize minLayoutSize = m_frame->resizePageRectsKeepingRatio(originalPageSize, FloatSize(width * printingMinimumShrinkFactor, height * printingMinimumShrinkFactor));
 
     // This changes layout, so callers need to make sure that they don't paint to screen while in printing mode.
-    m_frame->setPrinting(true, minLayoutSize, originalPageSize, printingMaximumShrinkFactor / printingMinimumShrinkFactor, AdjustViewSize);
+   return m_frame->setPrinting(true, minLayoutSize, originalPageSize, printingMaximumShrinkFactor / printingMinimumShrinkFactor, AdjustViewSize);
 }
 
 float PrintContext::computeAutomaticScaleFactor(const FloatSize& availablePaperSize)

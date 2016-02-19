@@ -24,10 +24,12 @@
 #include <QPainter>
 #include <QRect>
 #include <qwebkitglobal.h>
-
+#include "QWebFrameAdapter.h"
+#include "IntRect.h"
 namespace WebCore {
 class PrintContext;
 class GraphicsContext;
+class IntRect;
 }
 
 class QWebFrameAdapter;
@@ -35,11 +37,17 @@ class QWebFrameAdapter;
 class WEBKIT_EXPORTDATA QtPrintContext {
 public:
     QtPrintContext(QPainter*, const QRect& pageRect, QWebFrameAdapter*);
+    QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, bool status);
+    QtPrintContext(QPainter* painter, QWebFrameAdapter* frameAdapter);
     ~QtPrintContext();
 
+    Vector<WebCore::IntRect> pageRects() const;
     int pageCount() const;
     void spoolPage(int pageNumber, float width);
-
+    WebCore::IntRect totalPageLayoutSize ;
+    bool printStatus;
+    QHash<const WebCore::Node*, const WebCore::RenderObject *> elementToRenderObject;
+    QPair<int, QRectF> QGetRectangle(QWebFrameAdapter* frameAdapter,Vector<WebCore::IntRect>& pagerect, const QWebElement & e);
 private:
     WebCore::GraphicsContext* m_graphicsContext;
     WebCore::PrintContext* m_printContext;

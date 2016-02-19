@@ -25,26 +25,107 @@
 #include "IntRect.h"
 #include "PrintContext.h"
 #include "QWebFrameAdapter.h"
+#include "RenderLayer.h"
+
+#include "Frame.h"
+#include "FrameLoaderClientQt.h"
+#include "FrameTree.h"
+#include "FrameView.h"
+#include "FloatQuad.h"
+#include "FlowThreadController.h"
+
 
 using namespace WebCore;
-
+QT_BEGIN_NAMESPACE
+extern Q_GUI_EXPORT int qt_defaultDpi();
+QT_END_NAMESPACE
 QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter)
     : m_graphicsContext(new GraphicsContext(painter))
     , m_printContext(new PrintContext(frameAdapter->frame))
 {
-    m_printContext->begin(pageRect.width(), pageRect.height());
-
+    totalPageLayoutSize = m_printContext->begin(pageRect.width(), pageRect.height());
+    printStatus = true;
     float pageHeight = 0;
     m_printContext->computePageRects(IntRect(pageRect), /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+}
+QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, bool status)
+    : m_graphicsContext(new GraphicsContext(painter))
+    , m_printContext(new PrintContext(frameAdapter->frame))
+{
+    totalPageLayoutSize = m_printContext->begin(pageRect.width(), pageRect.height());
+    printStatus = status;
+    float pageHeight = 0;
+    m_printContext->computePageRects(IntRect(pageRect), /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+}
+QtPrintContext::QtPrintContext(QPainter* painter, QWebFrameAdapter* frameAdapter)
+{
+
+    printStatus = false;
 }
 
 QtPrintContext::~QtPrintContext()
 {
-    m_printContext->end();
-    delete m_graphicsContext;
-    delete m_printContext;
-}
+    if(printStatus)
+    {
+        m_printContext->end();
+        delete m_printContext;
+        delete m_graphicsContext;
+    }
 
+
+}
+QPair<int, QRectF> QtPrintContext::QGetRectangle(QWebFrameAdapter* frameAdapter,Vector<IntRect>& pagerect, const QWebElement & e)
+{
+
+            if (elementToRenderObject.empty())
+                for(WebCore::RenderObject * o = frameAdapter->frame->document()->renderer();o;o=o->nextInPreOrder())
+                    if(o->node())
+                        elementToRenderObject[o->node()] =o;
+
+            if(!elementToRenderObject.contains(e.m_element))
+                return QPair<int, QRectF>(-1,QRectF());
+            const WebCore::RenderObject * ro = elementToRenderObject[e.m_element];
+           // Frame* fr = frameAdapter->frame->
+            //PrintContext* printContext = new PrintContext(frameAdapter->frame);
+//            const qreal zoomFactorX = printer->logicalDpiX() / qt_defaultDpi();
+//            const qreal zoomFactorY = printer->logicalDpiY() / qt_defaultDpi();
+//            IntRect pageRect(0, 0,
+//                                 int(printer->width() / zoomFactorX),
+//                                 int(printer->height() / zoomFactorY));
+
+            //m_printContext->begin(pageRect.width(), pageRect.height());
+            //float pageHeight = 0;
+            //m_printContext->computePageRects(pageRect, /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+
+            //painter.scale(zoomFactorX, zoomFactorY);
+            //int printWidth = pageRect.width();
+            const Vector<IntRect> & pageRects = pagerect;
+            if (pageRects.size() == 0)
+                    return QPair<int,QRectF>(-1, QRectF());
+           // WebCore::RenderView *root = toRenderView(frameAdapter->frame->document()->renderer());
+            //float scale = (float)printWidth / (float)root->width();
+            QRectF r(const_cast<WebCore::RenderObject *>(ro)->absoluteBoundingBoxRect());
+            int low=0;
+            int high=pageRects.size();
+            int c = r.y() + r.height() / 2;
+            while(low <= high)
+            {
+                int m = (low + high)/2;
+                if(c < pageRects[m].y())
+                    high = m-1;
+                else if(c > pageRects[m].maxY())
+                            low = m +1;
+                else {
+                       QRectF tr = r.translated(0, -pageRects[m].y());
+                       return QPair<int, QRectF>(m+1, QRect(tr.x() , tr.y(), tr.width(), tr.height()));
+                     }
+            }
+    return QPair<int,QRectF>(-1, QRectF());
+}
+Vector<IntRect> QtPrintContext::pageRects() const
+{
+    return m_printContext->pageRects();
+}
 int QtPrintContext::pageCount() const
 {
     return m_printContext->pageCount();
