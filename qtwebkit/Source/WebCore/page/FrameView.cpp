@@ -1,4 +1,4 @@
- /*/////////.............................
+/*
  * Copyright (C) 1998, 1999 Torben Weis <weis@kde.org>
  *                     1999 Lars Knoll <knoll@kde.org>
  *                     1999 Antti Koivisto <koivisto@kde.org>
@@ -608,20 +608,19 @@ void FrameView::setContentsSize(const IntSize& size)
         m_setNeedsLayoutWasDeferred = false; // FIXME: Find a way to make the deferred layout actually happen.
 }
 
-IntRect FrameView::adjustViewSize()
+void FrameView::adjustViewSize()
 {
     RenderView* renderView = this->renderView();
-   // if (!renderView)
-     //   return NULL;
+    if (!renderView)
+        return;
 
     ASSERT(m_frame->view() == this);
 
     const IntRect rect = renderView->documentRect();
     const IntSize& size = rect.size();
     ScrollView::setScrollOrigin(IntPoint(-rect.x(), -rect.y()), !m_frame->document()->printing(), size == contentsSize());
-    IntRect rect1 = renderView->documentRect();
+    
     setContentsSize(size);
-    return rect1;
 }
 
 void FrameView::applyOverflowToViewport(RenderObject* o, ScrollbarMode& hMode, ScrollbarMode& vMode)
@@ -3844,7 +3843,7 @@ void FrameView::forceLayout(bool allowSubtree)
     layout(allowSubtree);
 }
 
-IntRect FrameView::forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot shouldAdjustViewSize)
+void FrameView::forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot shouldAdjustViewSize)
 {
     // Dumping externalRepresentation(m_frame->renderer()).ascii() is a good trick to see
     // the state of things before and after the layout
@@ -3895,10 +3894,9 @@ IntRect FrameView::forceLayoutForPagination(const FloatSize& pageSize, const Flo
             renderView->addLayoutOverflow(overflow); // This is how we clip in case we overflow again.
         }
     }
-    IntRect totalPageLayoutSize;
+
     if (shouldAdjustViewSize)
-       totalPageLayoutSize = adjustViewSize();
-    return totalPageLayoutSize;
+        adjustViewSize();
 }
 
 void FrameView::adjustPageHeightDeprecated(float *newBottom, float oldTop, float oldBottom, float /*bottomLimit*/)

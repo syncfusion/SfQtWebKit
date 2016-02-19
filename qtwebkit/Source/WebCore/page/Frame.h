@@ -1,4 +1,4 @@
- /*////////////////..................
+/*
  * Copyright (C) 1998, 1999 Torben Weis <weis@kde.org>
  *                     1999-2001 Lars Knoll <knoll@kde.org>
  *                     1999-2001 Antti Koivisto <koivisto@kde.org>
@@ -142,7 +142,7 @@ namespace WebCore {
 
         Settings* settings() const; // can be NULL
 
-        IntRect setPrinting(bool printing, const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkRatio, AdjustViewSizeOrNot);
+        void setPrinting(bool printing, const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkRatio, AdjustViewSizeOrNot);
         bool shouldUsePrintingLayout() const;
         FloatSize resizePageRectsKeepingRatio(const FloatSize& originalSize, const FloatSize& expectedSize);
 

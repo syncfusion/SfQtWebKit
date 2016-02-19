@@ -1,5 +1,5 @@
- /*,,,,,,,,,,,,,,...................../////////////////.,
- * Copyright (C) 2012 Digia Plc and/or its subsidiary(-ies).
+/*
+ * Copyright (C) 2015 The Qt Company Ltd.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -24,12 +24,10 @@
 #include <QPainter>
 #include <QRect>
 #include <qwebkitglobal.h>
-#include "QWebFrameAdapter.h"
-#include "IntRect.h"
+
 namespace WebCore {
 class PrintContext;
 class GraphicsContext;
-class IntRect;
 }
 
 class QWebFrameAdapter;
@@ -37,23 +35,14 @@ class QWebFrameAdapter;
 class WEBKIT_EXPORTDATA QtPrintContext {
 public:
     QtPrintContext(QPainter*, const QRect& pageRect, QWebFrameAdapter*);
-    QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, bool status);
-    QtPrintContext(QPainter* painter, QWebFrameAdapter* frameAdapter);
     ~QtPrintContext();
-//    void disposelink() const;
-    Vector<WebCore::IntRect> pageRects() const;
+
     int pageCount() const;
     void spoolPage(int pageNumber, float width);
-    WebCore::IntRect totalPageLayoutSize ;
-    bool printStatus;
-    //QPair<int, QRectF> Q
-    QHash<const WebCore::Node*, const WebCore::RenderObject *> elementToRenderObject;
-    QPair<int, QRectF> QGetRectangle(QWebFrameAdapter* frameAdapter,Vector<WebCore::IntRect>& pagerect, const QWebElement & e);
-    //IntRect GetTotalPageLayoutSize();
+
 private:
     WebCore::GraphicsContext* m_graphicsContext;
     WebCore::PrintContext* m_printContext;
-
 };
 
 #endif

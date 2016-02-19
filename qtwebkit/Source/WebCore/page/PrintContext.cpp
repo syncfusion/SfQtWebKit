@@ -1,4 +1,4 @@
- /*.................\\\\\\\\\\\\\\\\\\\\\\\//////////////...............
+/*
  * Copyright (C) 2007 Alp Toker <alp@atoker.com>
  * Copyright (C) 2007 Apple Inc.
  *
@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "PrintContext.h"
+
 #include "GraphicsContext.h"
 #include "Frame.h"
 #include "FrameView.h"
@@ -40,7 +41,7 @@ const float printingMinimumShrinkFactor = 1.25f;
 // in order to accommodate the widest line. If the page would have to be
 // reduced smaller to make the widest line fit, we just clip instead (this
 // behavior matches MacIE and Mozilla, at least)
-const float printingMaximumShrinkFactor = 2.0f;
+const float printingMaximumShrinkFactor = 2;
 
 PrintContext::PrintContext(Frame* frame)
     : m_frame(frame)
@@ -159,17 +160,16 @@ void PrintContext::computePageRectsWithPageSizeInternal(const FloatSize& pageSiz
     }
 }
 
-QSize PrintContext::ViewportToPdf = QSize(0, 0);
-
-IntRect PrintContext::begin(float width, float height)
+void PrintContext::begin(float width, float height)
 {
     // This function can be called multiple times to adjust printing parameters without going back to screen mode.
     m_isPrinting = true;
+
     FloatSize originalPageSize = FloatSize(width, height);
     FloatSize minLayoutSize = m_frame->resizePageRectsKeepingRatio(originalPageSize, FloatSize(width * printingMinimumShrinkFactor, height * printingMinimumShrinkFactor));
-	
+
     // This changes layout, so callers need to make sure that they don't paint to screen while in printing mode.
-   return m_frame->setPrinting(true, minLayoutSize, originalPageSize, printingMaximumShrinkFactor / printingMinimumShrinkFactor, AdjustViewSize);
+    m_frame->setPrinting(true, minLayoutSize, originalPageSize, printingMaximumShrinkFactor / printingMinimumShrinkFactor, AdjustViewSize);
 }
 
 float PrintContext::computeAutomaticScaleFactor(const FloatSize& availablePaperSize)
