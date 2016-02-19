@@ -1,4 +1,4 @@
-/*
+ /*
     Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
     Copyright (C) 2007 Staikos Computing Services Inc.
 
@@ -26,6 +26,24 @@
 #include "qwebframe.h"
 #include "qwebpage_p.h"
 
+//#include "EventHandler.h"
+#include "GraphicsContext.h"
+#include "KURL.h"
+//#include "PlatformString.h"
+#if ENABLE(ORIENTATION_EVENTS) && ENABLE(DEVICE_ORIENTATION)
+#include "qorientationsensor.h"
+#endif
+#include "qwebelement.h"
+#include "wtf/RefPtr.h"
+#include "Frame.h"
+#include "ViewportArguments.h"
+#include <qpainter.h>
+#include "PrintContext.h"
+#include "GraphicsContext.h"
+#include "QtPrintContext.h"
+#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+#include "texmap/TextureMapper.h"
+#endif
 
 namespace WebCore {
 class FrameLoaderClientQt;
@@ -42,12 +60,13 @@ public:
         : q(0)
         , page(0)
     { }
+
     void setPage(QWebPage*);
 
     inline QWebFrame *parentFrame() { return qobject_cast<QWebFrame*>(q->parent()); }
 
     static QWebFrame* kit(const QWebFrameAdapter*);
-
+  //  QHash<const WebCore::Node*, const WebCore::RenderObject *> elementToRenderObject;
     // Adapter implementation
     virtual QWebFrame* apiHandle() OVERRIDE;
     virtual QObject* handle() OVERRIDE;
@@ -65,7 +84,20 @@ public:
 
     QWebFrame *q;
     QWebPage *page;
-
+   // QtPrintContext m_printContext;
 };
-
+class QWebPrinterPrivate {
+public:
+    Vector<WebCore::IntRect> pageRect;
+//    WebCore::PrintContext printContext;
+//    QPainter & painter;
+//    const QWebFrame * frame;
+//    WebCore::GraphicsContext graphicsContext;
+//    int printWidth;
+//    QHash<const WebCore::Node*, const WebCore::RenderObject *> elementToRenderObject;
+QWebPrinterPrivate();
+~QWebPrinterPrivate();
+  //  QWebPrinterPrivate(const QWebFrame * frame, QPaintDevice *printer, QPainter &p);
+  //  ~QWebPrinterPrivate();
+};
 #endif
