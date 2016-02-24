@@ -26,6 +26,22 @@
 #include "qwebframe.h"
 #include "qwebpage_p.h"
 
+#include "GraphicsContext.h"
+#include "KURL.h"
+#if ENABLE(ORIENTATION_EVENTS) && ENABLE(DEVICE_ORIENTATION)
+#include "qorientationsensor.h"
+#endif
+#include "qwebelement.h"
+#include "wtf/RefPtr.h"
+#include "Frame.h"
+#include "ViewportArguments.h"
+#include <qpainter.h>
+#include "PrintContext.h"
+#include "GraphicsContext.h"
+#include "QtPrintContext.h"
+#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+#include "texmap/TextureMapper.h"
+#endif
 
 namespace WebCore {
 class FrameLoaderClientQt;
@@ -67,5 +83,10 @@ public:
     QWebPage *page;
 
 };
-
+class QWebPrinterPrivate {
+public:
+    Vector<WebCore::IntRect> pageRect;
+QWebPrinterPrivate();
+~QWebPrinterPrivate();
+};
 #endif

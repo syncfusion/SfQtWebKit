@@ -19,13 +19,86 @@
 */
 
 #include "config.h"
-#include "qwebframe.h"
 
+#include "BridgeJSC.h"
+#include "CallFrame.h"
+#include "Document.h"
+#include "DocumentLoader.h"
+#include "DragData.h"
+#include "Element.h"
+#include "FocusController.h"
+#include "Frame.h"
+#include "FrameLoaderClientQt.h"
+#include "FrameTree.h"
+#include "FrameView.h"
+#include "GCController.h"
+#include "HTMLMetaElement.h"
+#include "HitTestResult.h"
+#include "HTTPParsers.h"
+#include "IconDatabase.h"
+#include "InspectorController.h"
+#include "JSDOMBinding.h"
+#include "JSDOMWindowBase.h"
+#include "JSLock.h"
+#include "JSObject.h"
+#include "NetworkingContext.h"
+#include "NodeList.h"
+#include "Page.h"
+//#include "PlatformMouseEvent.h"
+//#include "PlatformWheelEvent.h"
+#include "PutPropertySlot.h"
+#include "RenderLayer.h"
+#include "RenderTreeAsText.h"
+#include "ScriptController.h"
+#include "ScriptSourceCode.h"
+#include "ScriptValue.h"
+#include "Scrollbar.h"
+#include "Settings.h"
+#include "SubstituteData.h"
+#include "SVGSMILElement.h"
+#include "TiledBackingStore.h"
+#include "htmlediting.h"
+#include "markup.h"
+#include "qt_instance.h"
+#include "qt_runtime.h"
+#include "runtime_object.h"
+#include "runtime_root.h"
+#include "wtf/HashMap.h"
+
+#include "ColumnInfo.h"
+#include "FloatQuad.h"
+#include "FlowThreadController.h"
+#include "FrameSelection.h"
+#include "HTMLFrameOwnerElement.h"
+#include "HTMLIFrameElement.h"
+#include "RenderGeometryMap.h"
+#include "RenderLayerBacking.h"
+#include "RenderNamedFlowThread.h"
+#include "RenderSelectionInfo.h"
+#include "RenderWidget.h"
+#include "RenderWidgetProtector.h"
+#include "StyleInheritedData.h"
+#include "TransformState.h"
+#include <wtf/StackStats.h>
+
+#if USE(ACCELERATED_COMPOSITING)
+#include "RenderLayerCompositor.h"
+#endif
+
+#if ENABLE(CSS_SHADERS) && USE(3D_GRAPHICS)
+#include "CustomFilterGlobalContext.h"
+#endif
+
+#include "qwebframe.h"
+#include "PrintContext.h"
 #include "QtPrintContext.h"
 #include "qwebelement.h"
 #include "qwebframe_p.h"
 #include "qwebpage.h"
 #include "qwebpage_p.h"
+#include "GraphicsContext.h"
+#include "RenderView.h"
+#include "ResourceRequest.h"
 #include "qwebscriptworld.h"
 #include "qwebscriptworld_p.h"
 #include "qwebsecurityorigin.h"
@@ -40,13 +113,32 @@
 #endif
 #include <qnetworkrequest.h>
 #include <qregion.h>
-
+#include "RenderObject.h"
 using namespace WebCore;
 
 // from text/qfont.cpp
 QT_BEGIN_NAMESPACE
 extern Q_GUI_EXPORT int qt_defaultDpi();
 QT_END_NAMESPACE
+
+QWebPrinterPrivate::QWebPrinterPrivate():pageRect()
+{
+
+}
+QWebPrinterPrivate::~QWebPrinterPrivate()
+{
+
+}
+QWebPrinter::QWebPrinter()
+    : d(new QWebPrinterPrivate())
+{
+
+}
+
+QWebPrinter::~QWebPrinter()
+{
+    delete d;
+}
 
 void QWebFramePrivate::setPage(QWebPage* newPage)
 {
@@ -204,7 +296,7 @@ int QWebFramePrivate::scrollBarPolicy(Qt::Orientation orientation) const
 
 QWebFrame::QWebFrame(QWebPage *parentPage)
     : QObject(parentPage)
-    , d(new QWebFramePrivate)
+    , d(new QWebFramePrivate), pe()
 {
     d->page = parentPage;
     d->q = this;
@@ -823,6 +915,32 @@ bool QWebFrame::event(QEvent *e)
 
     \sa render()
 */
+#ifndef QT_NO_PRINTER
+
+#endif //QT_NO_PRINTER
+
+void QWebFrame::SetPrintContext(QPrinter *printer)
+{
+    QPainter painter;
+
+    const qreal zoomFactorX = (qreal)printer->logicalDpiX() / qt_defaultDpi();
+    const qreal zoomFactorY = (qreal)printer->logicalDpiY() / qt_defaultDpi();
+
+    QRect qprinterRect = printer->pageRect();
+
+    QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
+
+    QtPrintContext printContext(&painter, pageRect, d, false);
+    pe.d->pageRect =  printContext.pageRects();
+
+}
+
+QPair<int, QRectF> QWebFrame::GetHyperlinkLocation(QPrinter *printer,const QWebElement & e)
+{
+    QPainter painter;
+    QtPrintContext printContext(&painter, d);
+    return printContext.QGetRectangle(d,pe.d->pageRect ,e);
+}
 void QWebFrame::print(QPrinter *printer) const
 {
 #if HAVE(QTPRINTSUPPORT)
@@ -838,6 +956,23 @@ void QWebFrame::print(QPrinter *printer) const
     QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
 
     QtPrintContext printContext(&painter, pageRect, d);
+    IntRect m_totalPageLayoutSize = printContext.totalPageLayoutSize;
+    QString sc = m_str;
+    std::string filePathString = sc.toStdString();
+    const char * filePath = filePathString.c_str();
+    FILE * pFile;
+    pFile = fopen (filePath,"a+");
+    QString layoutSizeVal =  QString::number(m_totalPageLayoutSize.size().height());
+    std::string layoutSizestring = layoutSizeVal.toStdString();
+    const char * layoutSizechar = layoutSizestring.c_str();
+
+      if (pFile!=NULL)
+      {
+        fputs("TotalLayoutPageSize,",pFile);
+        fputs (layoutSizechar,pFile);
+        fputs("\n",pFile);
+        fclose (pFile);
+      }
 
     int docCopies;
     int pageCopies;
@@ -1164,7 +1299,6 @@ QUrl QWebHitTestResult::linkUrl() const
     return d->linkUrl;
 }
 
-#if QT_DEPRECATED_SINCE(5,5)
 /*!
     \obsolete
     Use linkTitleString instead.
@@ -1177,7 +1311,6 @@ QUrl QWebHitTestResult::linkTitle() const
         return QUrl();
     return d->linkTitle;
 }
-#endif // QT_DEPRECATED_SINCE(5,5)
 
 /*!
     \since 5.5

@@ -180,7 +180,7 @@ public:
     void setShouldUpdateWhileOffscreen(bool);
     bool shouldUpdate(bool = false) const;
 
-    void adjustViewSize();
+    IntRect adjustViewSize();
     
     virtual IntRect windowClipRect(bool clipToContents = true) const;
     IntRect windowClipRectForFrameOwner(const HTMLFrameOwnerElement*, bool clipToLayerContents) const;
@@ -300,7 +300,7 @@ public:
     void enableAutoSizeMode(bool enable, const IntSize& minSize, const IntSize& maxSize);
 
     void forceLayout(bool allowSubtree = false);
-    void forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot);
+    IntRect forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot);
 
     // FIXME: This method is retained because of embedded WebViews in AppKit.  When a WebView is embedded inside
     // some enclosing view with auto-pagination, no call happens to resize the view.  The new pagination model

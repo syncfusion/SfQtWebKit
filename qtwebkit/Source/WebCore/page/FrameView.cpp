@@ -608,19 +608,18 @@ void FrameView::setContentsSize(const IntSize& size)
         m_setNeedsLayoutWasDeferred = false; // FIXME: Find a way to make the deferred layout actually happen.
 }
 
-void FrameView::adjustViewSize()
+IntRect FrameView::adjustViewSize()
 {
     RenderView* renderView = this->renderView();
-    if (!renderView)
-        return;
 
     ASSERT(m_frame->view() == this);
 
     const IntRect rect = renderView->documentRect();
     const IntSize& size = rect.size();
     ScrollView::setScrollOrigin(IntPoint(-rect.x(), -rect.y()), !m_frame->document()->printing(), size == contentsSize());
-    
+    IntRect rect1 = renderView->documentRect();
     setContentsSize(size);
+    return rect1;
 }
 
 void FrameView::applyOverflowToViewport(RenderObject* o, ScrollbarMode& hMode, ScrollbarMode& vMode)
@@ -3843,7 +3842,7 @@ void FrameView::forceLayout(bool allowSubtree)
     layout(allowSubtree);
 }
 
-void FrameView::forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot shouldAdjustViewSize)
+IntRect FrameView::forceLayoutForPagination(const FloatSize& pageSize, const FloatSize& originalPageSize, float maximumShrinkFactor, AdjustViewSizeOrNot shouldAdjustViewSize)
 {
     // Dumping externalRepresentation(m_frame->renderer()).ascii() is a good trick to see
     // the state of things before and after the layout
@@ -3894,9 +3893,10 @@ void FrameView::forceLayoutForPagination(const FloatSize& pageSize, const FloatS
             renderView->addLayoutOverflow(overflow); // This is how we clip in case we overflow again.
         }
     }
-
+    IntRect totalPageLayoutSize;
     if (shouldAdjustViewSize)
-        adjustViewSize();
+       totalPageLayoutSize = adjustViewSize();
+    return totalPageLayoutSize;
 }
 
 void FrameView::adjustPageHeightDeprecated(float *newBottom, float oldTop, float oldBottom, float /*bottomLimit*/)

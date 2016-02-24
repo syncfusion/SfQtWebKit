@@ -142,7 +142,7 @@ public:
 
     void render(QPainter* painter);
     void render(QPainter* painter, const QRect& clipRect);
-
+    WebCore::Element* m_element;
 private:
     explicit QWebElement(WebCore::Element*);
     explicit QWebElement(WebCore::Node*);
@@ -159,7 +159,7 @@ private:
     friend class QtWebElementRuntime;
 
     QWebElementPrivate* d;
-    WebCore::Element* m_element;
+
 };
 
 class QWebElementCollectionPrivate;
