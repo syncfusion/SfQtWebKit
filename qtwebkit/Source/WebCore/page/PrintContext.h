@@ -23,6 +23,7 @@
 
 #include <wtf/Forward.h>
 #include <wtf/Vector.h>
+#include <qsize.h>
 
 namespace WebCore {
 
@@ -56,6 +57,7 @@ public:
 
     float computeAutomaticScaleFactor(const FloatSize& availablePaperSize);
 
+	void setViewportToPdf(QSize);
     // Enter print mode, updating layout for new page size.
     // This function can be called multiple times to apply new print options without going back to screen mode.
     IntRect begin(float width, float height = 0);
