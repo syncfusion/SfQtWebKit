@@ -21,6 +21,7 @@
 #include "config.h"
 #include "QWebFrameAdapter.h"
 
+#include "PrintContext.h"
 #include "APICast.h"
 #include "Chrome.h"
 #include "ChromeClientQt.h"
@@ -975,6 +976,8 @@ void QWebFrameAdapter::setViewportSize(const QSize& size)
     ASSERT(view);
     view->resize(size);
     view->adjustViewSize();
+	PrintContext printer(frame);
+	printer.setViewportToPdf(size);
 
     if (view->needsLayout())
         view->layout();

@@ -160,11 +160,18 @@ void PrintContext::computePageRectsWithPageSizeInternal(const FloatSize& pageSiz
     }
 }
 
+QSize viewportToPdf;
+
+void PrintContext::setViewportToPdf(QSize size){
+	viewportToPdf = size;
+}
+
 IntRect PrintContext::begin(float width, float height)
 {
     // This function can be called multiple times to adjust printing parameters without going back to screen mode.
     m_isPrinting = true;
 
+	width = (float)viewportToPdf.width();
     FloatSize originalPageSize = FloatSize(width, height);
     FloatSize minLayoutSize = m_frame->resizePageRectsKeepingRatio(originalPageSize, FloatSize(width * printingMinimumShrinkFactor, height * printingMinimumShrinkFactor));
 
