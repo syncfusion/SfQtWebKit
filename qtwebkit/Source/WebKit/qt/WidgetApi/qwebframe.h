@@ -198,6 +198,7 @@ public:
     void setTextSizeMultiplier(qreal factor);
     qreal textSizeMultiplier() const;
 
+	void createMhtmlDocument();
     qreal zoomFactor() const;
     void setZoomFactor(qreal factor);
 

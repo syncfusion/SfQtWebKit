@@ -37,6 +37,7 @@
 #include "ScrollTypes.h"
 #include "UserScriptTypes.h"
 #include <wtf/RefCounted.h>
+#include "SharedBuffer.h"
 
 #if PLATFORM(WIN)
 #include "FrameWin.h"
@@ -157,6 +158,7 @@ namespace WebCore {
         float textZoomFactor() const { return m_textZoomFactor; }
         void setPageAndTextZoomFactors(float pageZoomFactor, float textZoomFactor);
 
+		void GenerateMIMEHtml(QString);
         // Scale factor of this frame with respect to the container.
         float frameScaleFactor() const;
 

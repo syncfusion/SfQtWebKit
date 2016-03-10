@@ -37,7 +37,7 @@ namespace WebCore {
 
 static const size_t maximumLineLength = 76;
 
-static const char crlfLineEnding[] = "\r\n";
+static const char crlfLineEnding[] = "\n";
 
 static size_t lengthOfLineEndingAtIndex(const char* input, size_t inputLength, size_t index)
 {
