@@ -791,6 +791,11 @@ qreal QWebFrame::zoomFactor() const
     return d->zoomFactor();
 }
 
+void QWebFrame::createMhtmlDocument()
+{
+	d->GenerateMHTML(m_str);
+}
+
 /*!
     \property QWebFrame::focus
     \since 4.6

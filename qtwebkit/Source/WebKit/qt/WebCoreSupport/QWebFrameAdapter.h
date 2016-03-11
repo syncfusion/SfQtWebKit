@@ -211,6 +211,7 @@ public:
     void setTextSizeMultiplier(qreal);
     qreal zoomFactor() const;
 
+	void GenerateMHTML(QString);
     void updateBackgroundRecursively(const QColor&);
 
     void cancelLoad();

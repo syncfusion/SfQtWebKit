@@ -335,6 +335,11 @@ void QWebFrameAdapter::setZoomFactor(qreal factor)
         frame->setPageZoomFactor(factor);
 }
 
+void QWebFrameAdapter::GenerateMHTML(QString m_str)
+{
+	frame->GenerateMIMEHtml(m_str);
+}
+
 void QWebFrameAdapter::setTextSizeMultiplier(qreal factor)
 {
     pageAdapter->settings->setAttribute(QWebSettings::ZoomTextOnly, true);

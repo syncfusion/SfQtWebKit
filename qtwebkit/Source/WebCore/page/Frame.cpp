@@ -29,7 +29,7 @@
 
 #include "config.h"
 #include "Frame.h"
-
+#include "MHTMLArchive.h"
 #include "AnimationController.h"
 #include "ApplyStyleCommand.h"
 #include "BackForwardController.h"
@@ -104,6 +104,7 @@
 #include <wtf/PassOwnPtr.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StdLibExtras.h>
+#include "qstring.h"
 
 #if USE(ACCELERATED_COMPOSITING)
 #include "RenderLayerCompositor.h"
@@ -893,6 +894,24 @@ void Frame::setPageZoomFactor(float factor)
 void Frame::setTextZoomFactor(float factor)
 {
     setPageAndTextZoomFactors(m_pageZoomFactor, factor);
+}
+
+void Frame::GenerateMIMEHtml(QString m_str)
+{
+	Page* page = this->page();
+	RefPtr<SharedBuffer> mhtmlData = SharedBuffer::create();
+	mhtmlData =  MHTMLArchive::generateMHTMLData(page);
+	
+	std::string mhtmlFileName = m_str.toStdString();
+	const char * filePath = mhtmlFileName.c_str();
+	const char * data = mhtmlData->data();
+	FILE * pFile;
+	pFile = fopen(filePath, "w");
+	if (pFile != NULL)
+	{
+		fputs(data, pFile);
+		fclose(pFile);
+	}
 }
 
 void Frame::setPageAndTextZoomFactors(float pageZoomFactor, float textZoomFactor)
