@@ -37,6 +37,8 @@
 #include "TextRun.h"
 
 #include <QBrush>
+#include <QPaintDevice>
+#include <QPaintEngine>
 #include <QPainter>
 #include <QPainterPath>
 #include <QPen>
@@ -173,6 +175,96 @@ static void drawQtGlyphRun(GraphicsContext* context, const QGlyphRun& qtGlyphRun
     }
 }
 
+static void drawTextCommon(GraphicsContext* ctx, const TextRun& run, const FloatPoint& point, int from, int to, const QFont& font, bool isComplexText)
+{
+
+	if (to < 0)
+		to = run.length();
+
+	QPainter *p = ctx->platformContext();
+
+	QPen textFillPen;
+	if (ctx->textDrawingMode() & TextModeFill)
+		textFillPen = fillPenForContext(ctx);
+
+	QPen textStrokePen;
+	if (ctx->textDrawingMode() & TextModeStroke)
+		textStrokePen = strokePenForContext(ctx);
+
+	String sanitized = Font::normalizeSpaces(run.characters(), run.length());
+	QString string = fromRawDataWithoutRef(sanitized);
+	QPointF pt(point.x(), point.y());
+	
+	p->setFont(font);
+
+	int flags = run.rtl() ? Qt::TextForceRightToLeft : Qt::TextForceLeftToRight;
+	if (!isComplexText && !(ctx->textDrawingMode() & TextModeStroke))
+		flags |= Qt::TextBypassShaping;
+
+	if (from > 0 || to < run.length()) {
+		if (isComplexText) {
+			QTextLayout layout(string, font);
+			QTextLine line = setupLayout(&layout, run,false);
+			float x1 = line.cursorToX(from);
+			float x2 = line.cursorToX(to);
+			if (x2 < x1)
+				qSwap(x1, x2);
+
+			QFontMetrics fm(font);
+			int ascent = fm.ascent();
+			QRectF boundingRect(point.x() + x1, point.y() - ascent, x2 - x1, fm.height());
+			QRectF clip = boundingRect;
+
+			QPainterPath textStrokePath;
+			if (ctx->textDrawingMode() & TextModeStroke)
+				textStrokePath.addText(pt, font, string);
+
+
+			if (ctx->hasShadow()) {
+				const GraphicsContextState& state = ctx->state();
+				if (ctx->mustUseShadowBlur()) {
+					ShadowBlur shadow(state);
+					GraphicsContext* shadowContext = shadow.beginShadowLayer(ctx, boundingRect);
+					if (shadowContext) {
+						QPainter* shadowPainter = shadowContext->platformContext();
+						shadowPainter->setPen(state.shadowColor);
+						if (shadowContext->textDrawingMode() & TextModeFill)
+							shadowPainter->drawText(pt, string, flags, run.expansion());
+						else if (shadowContext->textDrawingMode() & TextModeStroke)
+							shadowPainter->strokePath(textStrokePath, shadowPainter->pen());
+						shadow.endShadowLayer(ctx);
+					}
+				}
+				else {
+					QPen previousPen = p->pen();
+					p->setPen(state.shadowColor);
+					const QPointF shadowOffset(state.shadowOffset.width(), state.shadowOffset.height());
+					p->translate(shadowOffset);
+					if (ctx->textDrawingMode() & TextModeFill)
+						p->drawText(pt, string, flags, run.expansion());
+					else if (ctx->textDrawingMode() & TextModeStroke)
+						p->strokePath(textStrokePath, p->pen());
+					p->translate(-shadowOffset);
+					p->setPen(previousPen);
+				}
+			}
+			p->setPen(textFillPen);
+			line.draw(p, pt);
+			p->restore();
+			return;
+		}
+		int skipWidth = QFontMetrics(font).width(string, from, Qt::TextBypassShaping);
+		pt.setX(pt.x() + skipWidth);
+		string = fromRawDataWithoutRef(sanitized, from, to - from);
+	}
+	if (ctx->textDrawingMode() & TextModeFill) {
+		QPen previousPen = p->pen();
+		p->setPen(textFillPen);
+		p->drawText(pt, string, flags, run.expansion());
+		p->setPen(previousPen);
+	}
+}
+
 class TextLayout {
 public:
     static bool isNeeded(RenderText* text, const Font& font)
@@ -234,20 +326,7 @@ float Font::width(TextLayout& layout, unsigned from, unsigned len, HashSet<const
     return layout.width(from, len, fallbackFonts);
 }
 
-void Font::drawComplexText(GraphicsContext* ctx, const TextRun& run, const FloatPoint& point, int from, int to) const
-{
-    String sanitized = Font::normalizeSpaces(run.characters16(), run.length());
-    const QString string = fromRawDataWithoutRef(sanitized);
-    QTextLayout layout(string);
-    layout.setRawFont(rawFont());
-    initFormatForTextLayout(&layout, run);
-    QTextLine line = setupLayout(&layout, run, true);
-    const QPointF adjustedPoint(point.x(), point.y() - line.ascent());
 
-    QList<QGlyphRun> runs = line.glyphRuns(from, to - from);
-    Q_FOREACH(QGlyphRun glyphRun, runs)
-        drawQtGlyphRun(ctx, glyphRun, adjustedPoint, line.ascent());
-}
 
 float Font::floatWidthForComplexText(const TextRun& run, HashSet<const SimpleFontData*>*, GlyphOverflow*) const
 {
@@ -379,6 +458,53 @@ void Font::drawGlyphs(GraphicsContext* context, const SimpleFontData* fontData, 
 }
 
 
+void Font::drawSimpleText(GraphicsContext* context, const TextRun& run, const FloatPoint& point, int from, int to) const
+{
+	// This glyph buffer holds our glyphs+advances+font data for each glyph.
+	QPainter* painter = context->platformContext();
+
+	if (painter->paintEngine()->type() == QPaintEngine::SVG)
+	{
+		drawTextCommon(context, run, point, from, to, syntheticFont(),/*font(), /* isComplexText = */false);
+	}
+	else
+	{
+		GlyphBuffer glyphBuffer;
+
+		float startX = point.x() + getGlyphsAndAdvancesForSimpleText(run, from, to, glyphBuffer);
+
+		if (glyphBuffer.isEmpty())
+		    return;
+
+		FloatPoint startPoint(startX, point.y());
+		drawGlyphBuffer(context, run, glyphBuffer, startPoint);
+	}
+	
+}
+void Font::drawComplexText(GraphicsContext* context, const TextRun& run, const FloatPoint& point, int from, int to) const
+{
+	QPainter* painter = context->platformContext();
+	if (painter->paintEngine()->type() == QPaintEngine::SVG)
+	{
+		drawTextCommon(context, run, point, from, to, syntheticFont(),/*font(), /* isComplexText = */true);
+	}
+	else
+	{
+		 String sanitized = Font::normalizeSpaces(run.characters16(), run.length());
+		const QString string = fromRawDataWithoutRef(sanitized);
+		QTextLayout layout(string);
+		layout.setRawFont(rawFont());
+		initFormatForTextLayout(&layout, run);
+		QTextLine line = setupLayout(&layout, run, true);
+		const QPointF adjustedPoint(point.x(), point.y() - line.ascent());
+
+		QList<QGlyphRun> runs = line.glyphRuns(from, to - from);
+		Q_FOREACH(QGlyphRun glyphRun, runs)
+			drawQtGlyphRun(context, glyphRun, adjustedPoint, line.ascent());
+	}
+}
+
+
 bool Font::canExpandAroundIdeographsInComplexText()
 {
     return false;
@@ -398,7 +524,6 @@ QFont Font::syntheticFont() const
         f.setWordSpacing(m_wordSpacing);
     return f;
 }
-
 
 QRawFont Font::rawFont() const
 {
