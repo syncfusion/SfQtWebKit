@@ -62,6 +62,7 @@ public:
 #if ENABLE(8BIT_TEXTRUN)
     TextRun(const LChar* c, unsigned len, float xpos = 0, float expansion = 0, ExpansionBehavior expansionBehavior = AllowTrailingExpansion | ForbidLeadingExpansion, TextDirection direction = LTR, bool directionalOverride = false, bool characterScanForCodePath = true, RoundingHacks roundingHacks = RunRounding | WordRounding)
         : m_charactersLength(len)
+		, m_characters(c)
         , m_len(len)
         , m_xpos(xpos)
 #if ENABLE(SVG)
@@ -85,6 +86,7 @@ public:
 
     TextRun(const UChar* c, unsigned len, float xpos = 0, float expansion = 0, ExpansionBehavior expansionBehavior = AllowTrailingExpansion | ForbidLeadingExpansion, TextDirection direction = LTR, bool directionalOverride = false, bool characterScanForCodePath = true, RoundingHacks roundingHacks = RunRounding | WordRounding)
         : m_charactersLength(len)
+		, m_characters(c)
         , m_len(len)
         , m_xpos(xpos)
 #if ENABLE(SVG)
@@ -107,6 +109,7 @@ public:
     
     TextRun(const String& s, float xpos = 0, float expansion = 0, ExpansionBehavior expansionBehavior = AllowTrailingExpansion | ForbidLeadingExpansion, TextDirection direction = LTR, bool directionalOverride = false, bool characterScanForCodePath = true, RoundingHacks roundingHacks = RunRounding | WordRounding)
         : m_charactersLength(s.length())
+		, m_characters(s.characters())
         , m_len(s.length())
         , m_xpos(xpos)
 #if ENABLE(SVG)
@@ -155,6 +158,13 @@ public:
         return result;
     }
 
+	UChar operator[](int i) const { ASSERT(i >= 0 && i < m_len); return m_characters[i]; }
+    const UChar* data(int i) const { ASSERT(i >= 0 && i < m_len); return &m_characters[i]; }
+
+    const UChar* characters() const { return m_characters; }
+
+    void setText(const UChar* c, int len) { m_characters = c; m_len = len; }
+	
     UChar operator[](unsigned i) const { ASSERT_WITH_SECURITY_IMPLICATION(i < m_len); return is8Bit() ? m_data.characters8[i] :m_data.characters16[i]; }
     const LChar* data8(unsigned i) const { ASSERT_WITH_SECURITY_IMPLICATION(i < m_len); ASSERT(is8Bit()); return &m_data.characters8[i]; }
     const UChar* data16(unsigned i) const { ASSERT_WITH_SECURITY_IMPLICATION(i < m_len); ASSERT(!is8Bit()); return &m_data.characters16[i]; }
@@ -227,7 +237,7 @@ public:
 
 private:
     static bool s_allowsRoundingHacks;
-
+	const UChar* m_characters;
     union {
         const LChar* characters8;
         const UChar* characters16;

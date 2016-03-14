@@ -895,7 +895,9 @@ bool QSvgPaintEngine::end()
 void QSvgPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm,
                                  const QRectF &sr)
 {
-    drawImage(r, pm.toImage(), sr);
+    QRect sourceRect = sr.toRect();
+    QPixmap pixmap = sourceRect != pm.rect() ? pm.copy(sourceRect) : pm;
+    drawImage(r, pixmap.toImage(), sr);
 }
 
 void QSvgPaintEngine::drawImage(const QRectF &r, const QImage &image,
