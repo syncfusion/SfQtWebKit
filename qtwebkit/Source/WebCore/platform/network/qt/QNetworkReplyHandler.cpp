@@ -766,7 +766,8 @@ QNetworkReply* QNetworkReplyHandler::sendNetworkRequest(QNetworkAccessManager* m
             return manager->get(m_request);
         case QNetworkAccessManager::PostOperation: {
             FormDataIODevice* postDevice = getIODevice(request);
-            QNetworkReply* result = manager->post(m_request, postDevice);
+			QByteArray postData = postDevice->readAll();
+			QNetworkReply* result = manager->post(m_request, postData);
             postDevice->setParent(result);
             return result;
         }
