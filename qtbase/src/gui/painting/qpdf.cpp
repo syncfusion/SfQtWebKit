@@ -1096,13 +1096,7 @@ void QPdfEngine::drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, con
         // set current pen as d->brush
         d->brush = d->pen.brush();
     }
-    std::string fileName = d->outputFileName.toStdString();
-        int lastindex = fileName.find_last_of(".");
-        std::string rawname = fileName.substr(0, lastindex) + ".txt";
-        const char * textFileName = rawname.c_str();
-	FILE * pFile;
-    pFile = fopen (textFileName,"a+");
-   // this->state->matrix().m11()
+
     QString imScale =  QString::number(this->state->matrix().m11());
     std::string imScalestring = imScale.toStdString();
     const char * imScalechar = imScalestring.c_str();
@@ -1138,27 +1132,21 @@ void QPdfEngine::drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, con
   //std::string m31Valstring = m31Val.toStdString();
   //const char * m31Valchar = m31Valstring.c_str();
 
-  if (pFile!=NULL)
-  {
-    fputs("image,",pFile);
-    fputs (imScalechar,pFile);
-    fputs(",",pFile);
-    fputs (xValchar,pFile);
-    fputs(",",pFile);
-    fputs (yValchar,pFile);
-    fputs(",",pFile);
-    fputs (dxValchar,pFile);
-    fputs(",",pFile);
-    fputs (dyValchar,pFile);
-    fputs(",",pFile);
-    fputs (imWidthlchar,pFile);
-    fputs(",",pFile);
-    fputs (imheightlchar,pFile);
-    fputs("\n",pFile);
-   // fputs (m31Valchar,pFile);
-   // fputs(",",pFile);
-    fclose (pFile);
-  }
+  d->textRegion.append("image,");
+  d->textRegion.append(imScalechar);
+  d->textRegion.append(",");
+  d->textRegion.append(xValchar);
+  d->textRegion.append(",");
+  d->textRegion.append(yValchar);
+  d->textRegion.append(",");
+  d->textRegion.append(dxValchar);
+  d->textRegion.append(",");
+  d->textRegion.append(dyValchar);
+  d->textRegion.append(",");
+  d->textRegion.append(imWidthlchar);
+  d->textRegion.append(",");
+  d->textRegion.append(imheightlchar);
+  d->textRegion.append("\n");
     setBrush();
     d->currentPage->streamImage(image.width(), image.height(), object);
     *d->currentPage << "Q\n";
@@ -1186,15 +1174,7 @@ void QPdfEngine::drawImage(const QRectF &rectangle, const QImage &image, const Q
     setBrush();
     d->currentPage->streamImage(im.width(), im.height(), object);
     *d->currentPage << "Q\n";
-    std::string fileName = d->outputFileName.toStdString();
-        int lastindex = fileName.find_last_of(".");
-        std::string rawname = fileName.substr(0, lastindex) + ".txt";
-    //    int index =outputFileName.indexOf(".");
-    //    QString fileName = outputFileName.remove(index,3);
-        const char * textFileName = rawname.c_str();
-    FILE * pFile;
-    pFile = fopen (textFileName,"a+");
-   // this->state->matrix().m11()
+
     QString imScale =  QString::number(this->state->matrix().m11());
     std::string imScalestring = imScale.toStdString();
     const char * imScalechar = imScalestring.c_str();
@@ -1231,27 +1211,21 @@ void QPdfEngine::drawImage(const QRectF &rectangle, const QImage &image, const Q
   //std::string m31Valstring = m31Val.toStdString();
   //const char * m31Valchar = m31Valstring.c_str();
 
-  if (pFile!=NULL)
-  {
-    fputs("image,",pFile);
-    fputs (imScalechar,pFile);
-    fputs(",",pFile);
-    fputs (xValchar,pFile);
-    fputs(",",pFile);
-    fputs (yValchar,pFile);
-    fputs(",",pFile);
-    fputs (dxValchar,pFile);
-    fputs(",",pFile);
-    fputs (dyValchar,pFile);
-    fputs(",",pFile);
-    fputs (imWidthlchar,pFile);
-    fputs(",",pFile);
-    fputs (imheightlchar,pFile);
-    fputs("\n",pFile);
-   // fputs (m31Valchar,pFile);
-   // fputs(",",pFile);
-    fclose (pFile);
-  }
+	  d->textRegion.append("image,");
+	  d->textRegion.append(imScalechar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(xValchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(yValchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(dxValchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(dyValchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(imWidthlchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(imheightlchar);
+	  d->textRegion.append("\n");
 }
 
 void QPdfEngine::drawTiledPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QPointF &point)
@@ -1305,12 +1279,6 @@ void QPdfEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
     QBrush b = d->brush;
     d->brush = d->pen.brush();
     setBrush();
-    std::string fileName = d->outputFileName.toStdString();
-        int lastindex = fileName.find_last_of(".");
-        std::string rawname = fileName.substr(0, lastindex) + ".txt";
-        const char * textFileName = rawname.c_str();
-    FILE * pFile;
-    pFile = fopen (textFileName,"a+");
   QString m11Val =  QString::number(d->stroker.matrix.m11());
   std::string m11Valstring = m11Val.toStdString();
   const char * m11Valchar = m11Valstring.c_str();
@@ -1331,21 +1299,13 @@ void QPdfEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
   //std::string m31Valstring = m31Val.toStdString();
   //const char * m31Valchar = m31Valstring.c_str();
 
-  if (pFile!=NULL)
-  {
-    fputs("text,",pFile);
-    fputs (m11Valchar,pFile);
-    fputs(",",pFile);
-    fputs (dxValchar,pFile);
-    fputs(",",pFile);
-    fputs (dyValchar,pFile);
-    fputs(",",pFile);
-   // fputs (m21Valchar,pFile);
-    //fputs(",",pFile);
-   // fputs (m31Valchar,pFile);
-   // fputs(",",pFile);
-    fclose (pFile);
-  }
+	  d->textRegion.append("text,");
+	  d->textRegion.append(m11Valchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(dxValchar);
+	  d->textRegion.append(",");
+	  d->textRegion.append(dyValchar);
+	  d->textRegion.append(",");
     const QTextItemInt &ti = static_cast<const QTextItemInt &>(textItem);
     Q_ASSERT(ti.fontEngine->type() != QFontEngine::Multi);
     d->drawTextItem(p, ti);
@@ -2079,6 +2039,20 @@ void QPdfEnginePrivate::writeTail()
             "startxref\n%d\n"
             "%%%%EOF\n",
             xrefPositions.size()-1, info, catalog, xrefPositions.last());
+
+		std::string fileName = outputFileName.toStdString();
+	    int lastindex = fileName.find_last_of(".");
+	    std::string rawname = fileName.substr(0, lastindex) + ".txt";
+	    const char * textFileName = rawname.c_str();
+		FILE * pFile;
+	    pFile = fopen (textFileName,"a+");
+		std::string regions = textRegion.toStdString();
+		const char * rawdata = regions.c_str();
+	    if (pFile != NULL)
+	    {
+			fputs(rawdata, pFile);
+			fclose(pFile);
+		}
 }
 
 int QPdfEnginePrivate::addXrefEntry(int object, bool printostr)
@@ -2755,13 +2729,6 @@ void QPdfEnginePrivate::drawTextItem(const QPointF &p, const QTextItemInt &ti)
         last_x = x;
         last_y = y;
     }
-		std::string fileName = outputFileName.toStdString();
-        int lastindex = fileName.find_last_of(".");
-        std::string rawname = fileName.substr(0, lastindex) + ".txt";
-
-        const char * textFileName = rawname.c_str();
-	FILE * pFile;
-    pFile = fopen (textFileName,"a+");
   QString lastxVal =  QString::number(first_x);
   std::string lastxstring = lastxVal.toStdString();
   const char * lastxchar = lastxstring.c_str();
@@ -2778,18 +2745,14 @@ void QPdfEnginePrivate::drawTextItem(const QPointF &p, const QTextItemInt &ti)
   std::string fontsizestring = fontsizeVal.toStdString();
   const char * fontsizechar = fontsizestring.c_str();
 
-  if (pFile!=NULL)
-  {
-    fputs (fontsizechar,pFile);
-    fputs(",",pFile);
-    fputs (descentValchar,pFile);
-    fputs(",",pFile);
-    fputs (lastxchar,pFile);
-    fputs(",",pFile);
-    fputs (lastychar,pFile);
-    fputs("\n",pFile);
-    fclose (pFile);
-  }
+  textRegion.append(fontsizechar);
+  textRegion.append(",");
+  textRegion.append(descentValchar);
+  textRegion.append(",");
+  textRegion.append(lastxchar);
+  textRegion.append(",");
+  textRegion.append(lastychar);
+  textRegion.append("\n");
   //q->newPage();
     if (synthesized & QFontEngine::SynthesizedBold) {
         *currentPage << stretch << (synthesized & QFontEngine::SynthesizedItalic
@@ -2845,25 +2808,13 @@ void QPdfEnginePrivate::newPage()
                  << QPdf::generateMatrix(pageMatrix())
                  << "q q\n";
     QTransform resolutionTransform = pageMatrix();
-    std::string fileName = outputFileName.toStdString();
-    int lastindex = fileName.find_last_of(".");
-    std::string rawname = fileName.substr(0, lastindex) + ".txt";
-    const char * textFileName = rawname.c_str();
-    FILE * pFile;
-    pFile = fopen (textFileName,"a+");
   QString m11Val =  QString::number(resolutionTransform.m11());
   std::string m11Valstring = m11Val.toStdString();
   const char * m11Valchar = m11Valstring.c_str();
 
-
-  if (pFile!=NULL)
-  {
-    fputs (m11Valchar,pFile);
-    fputs(" ",pFile);
-    //fputs (lastychar,pFile);
-    fputs("\n",pFile);
-    fclose (pFile);
-  }
+  textRegion.append(m11Valchar);
+  textRegion.append(" ");
+  textRegion.append("\n");
 }
 
 QT_END_NAMESPACE
