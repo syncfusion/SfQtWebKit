@@ -266,6 +266,7 @@ public:
     QString outputFileName;
     QString title;
     QString creator;
+    QString textRegion;
     bool embedFonts;
     int resolution;
     bool grayscale;
