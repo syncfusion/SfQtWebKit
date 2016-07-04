@@ -946,6 +946,15 @@ QPair<int, QRectF> QWebFrame::GetHyperlinkLocation(QPrinter *printer,const QWebE
     QtPrintContext printContext(&painter, d);
     return printContext.QGetRectangle(d,pe.d->pageRect ,e);
 }
+/*!
+Set element to render
+*/
+WebCore::Element* element;
+void QWebFrame::setElementToRender(WebCore::Element* renderElement)
+{
+	element = renderElement;
+}
+
 void QWebFrame::print(QPrinter *printer) const
 {
 #if HAVE(QTPRINTSUPPORT)
@@ -959,9 +968,13 @@ void QWebFrame::print(QPrinter *printer) const
     QRect qprinterRect = printer->pageRect();
 
     QRect pageRect(0, 0, int(qprinterRect.width() / zoomFactorX), int(qprinterRect.height() / zoomFactorY));
-
-    QtPrintContext printContext(&painter, pageRect, d);
+	QtPrintContext printContext(&painter, pageRect, d,element);
     IntRect m_totalPageLayoutSize = printContext.totalPageLayoutSize;
+	if (element != NULL)
+	{
+		IntRect elementBounds = element->pixelSnappedBoundingBox();
+		m_totalPageLayoutSize = IntRect(m_totalPageLayoutSize.x(), m_totalPageLayoutSize.y(), m_totalPageLayoutSize.width(), elementBounds.height());
+	}
     QString sc = m_str;
     std::string filePathString = sc.toStdString();
     const char * filePath = filePathString.c_str();

@@ -36,7 +36,7 @@ class QWebFrameAdapter;
 
 class WEBKIT_EXPORTDATA QtPrintContext {
 public:
-    QtPrintContext(QPainter*, const QRect& pageRect, QWebFrameAdapter*);
+	QtPrintContext(QPainter*, const QRect& pageRect, QWebFrameAdapter*, WebCore::Element*);
     QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, bool status);
     QtPrintContext(QPainter* painter, QWebFrameAdapter* frameAdapter);
     ~QtPrintContext();

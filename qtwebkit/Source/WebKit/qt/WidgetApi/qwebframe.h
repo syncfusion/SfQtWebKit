@@ -199,6 +199,7 @@ public:
     qreal textSizeMultiplier() const;
 
 	void createMhtmlDocument();
+	void  setElementToRender(WebCore::Element*);
     qreal zoomFactor() const;
     void setZoomFactor(qreal factor);
 
