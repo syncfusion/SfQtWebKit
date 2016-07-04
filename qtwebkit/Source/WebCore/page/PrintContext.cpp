@@ -55,6 +55,15 @@ PrintContext::~PrintContext()
         end();
 }
 
+/*!
+Set element to render
+*/
+WebCore::Element* renderElement;
+void PrintContext::setElementToDraw(WebCore::Element* element)
+{
+	renderElement = element;
+}
+
 void PrintContext::computePageRects(const FloatRect& printRect, float headerHeight, float footerHeight, float userScaleFactor, float& outPageHeight, bool allowHorizontalTiling)
 {
     m_pageRects.clear();
@@ -70,7 +79,15 @@ void PrintContext::computePageRects(const FloatRect& printRect, float headerHeig
 
     RenderView* view = m_frame->document()->renderView();
     const IntRect& documentRect = view->documentRect();
-    FloatSize pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(documentRect.width(), documentRect.height()));
+	FloatSize pageSize;
+	if (renderElement != NULL)
+	{
+		IntRect renderElementBounds = renderElement->pixelSnappedBoundingBox();
+		pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(documentRect.width(), renderElementBounds.height()));
+	}
+	else
+		pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(documentRect.width(), documentRect.height()));
+	
     float pageWidth = pageSize.width();
     float pageHeight = pageSize.height();
 
@@ -104,8 +121,14 @@ void PrintContext::computePageRectsWithPageSizeInternal(const FloatSize& pageSiz
     int pageHeight = pageSizeInPixels.height();
 
     bool isHorizontal = view->style()->isHorizontalWritingMode();
-
-    int docLogicalHeight = isHorizontal ? docRect.height() : docRect.width();
+	int docLogicalHeight;
+	if (renderElement != NULL)
+	{
+		IntRect renderElementBounds = renderElement->pixelSnappedBoundingBox();
+		docLogicalHeight = isHorizontal ? renderElementBounds.height() : docRect.width();
+	}
+	else
+		docLogicalHeight = isHorizontal ? docRect.height() : docRect.width();
     int pageLogicalHeight = isHorizontal ? pageHeight : pageWidth;
     int pageLogicalWidth = isHorizontal ? pageWidth : pageHeight;
 
@@ -201,12 +224,22 @@ void PrintContext::spoolPage(GraphicsContext& ctx, int pageNumber, float width)
 {
     // FIXME: Not correct for vertical text.
     IntRect pageRect = m_pageRects[pageNumber];
+	if (renderElement != NULL)
+	{
+		IntRect renderElementBounds = renderElement->pixelSnappedBoundingBox();
+		if (pageNumber > 0)
+			pageRect = IntRect(renderElementBounds.x(), renderElementBounds.y() + pageRect.y(), pageRect.width(), renderElementBounds.height());
+		else 
+			pageRect = IntRect(renderElementBounds.x(), renderElementBounds.y(), pageRect.width(), renderElementBounds.height());
+	}
     float scale = width / pageRect.width();
 
     ctx.save();
     ctx.scale(FloatSize(scale, scale));
     ctx.translate(-pageRect.x(), -pageRect.y());
     ctx.clip(pageRect);
+	//Set element to render 
+	m_frame->view()->setNodeToDraw(renderElement);
     m_frame->view()->paintContents(&ctx, pageRect);
     ctx.restore();
 }
