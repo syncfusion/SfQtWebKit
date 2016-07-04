@@ -64,6 +64,7 @@ public:
 
     // FIXME: eliminate width argument.
     void spoolPage(GraphicsContext& ctx, int pageNumber, float width);
+	void setElementToDraw(WebCore::Element*);
 
     void spoolRect(GraphicsContext& ctx, const IntRect&);
 

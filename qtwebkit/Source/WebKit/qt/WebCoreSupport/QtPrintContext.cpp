@@ -39,10 +39,14 @@ using namespace WebCore;
 QT_BEGIN_NAMESPACE
 extern Q_GUI_EXPORT int qt_defaultDpi();
 QT_END_NAMESPACE
-QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter)
+
+WebCore::Element* renderElement;
+QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, WebCore::Element* element)
     : m_graphicsContext(new GraphicsContext(painter))
     , m_printContext(new PrintContext(frameAdapter->frame))
 {
+	m_printContext->setElementToDraw(element);
+	renderElement = element;
     totalPageLayoutSize = m_printContext->begin(pageRect.width(), pageRect.height());
     printStatus = true;
     float pageHeight = 0;
@@ -105,9 +109,20 @@ QPair<int, QRectF> QtPrintContext::QGetRectangle(QWebFrameAdapter* frameAdapter,
            // WebCore::RenderView *root = toRenderView(frameAdapter->frame->document()->renderer());
             //float scale = (float)printWidth / (float)root->width();
             QRectF r(const_cast<WebCore::RenderObject *>(ro)->absoluteBoundingBoxRect());
+			IntRect renderElementBounds;
+			if (renderElement != NULL)
+				renderElementBounds = renderElement->pixelSnappedBoundingBox();
             int low=0;
             int high=pageRects.size();
             int c = r.y() + r.height() / 2;
+			int elementMaxWidth = r.x() + r.width() / 2;
+			if (renderElement == NULL || r.x() >= renderElementBounds.x() && elementMaxWidth <= renderElementBounds.x() + renderElementBounds.width() && r.y() >= renderElementBounds.y() && c <= renderElementBounds.y() + renderElementBounds.height())
+			{
+				if (renderElement != NULL)
+				{
+					r = QRectF(r.x() - renderElementBounds.x(), r.y() - renderElementBounds.y(), r.width(), r.height());
+					c = r.y() + r.height();
+				}
             while(low <= high)
             {
                 int m = (low + high)/2;
@@ -120,6 +135,7 @@ QPair<int, QRectF> QtPrintContext::QGetRectangle(QWebFrameAdapter* frameAdapter,
                        return QPair<int, QRectF>(m+1, QRect(tr.x() , tr.y(), tr.width(), tr.height()));
                      }
             }
+			}
     return QPair<int,QRectF>(-1, QRectF());
 }
 Vector<IntRect> QtPrintContext::pageRects() const
@@ -133,6 +149,8 @@ int QtPrintContext::pageCount() const
 
 void QtPrintContext::spoolPage(int pageNumber, float width)
 {
+	//Set element to draw
+	m_printContext->setElementToDraw(renderElement);
     m_printContext->spoolPage(*m_graphicsContext, pageNumber, width);
 }
 
