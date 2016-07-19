@@ -981,6 +981,8 @@ void QWebFrameAdapter::setViewportSize(const QSize& size)
     ASSERT(view);
     view->resize(size);
     view->adjustViewSize();
+	view->repeatTableHeader = repeatTableHeader;
+	view->repeatTableFooter = repeatTableFooter;
 	PrintContext printer(frame);
 	printer.setViewportToPdf(size);
 

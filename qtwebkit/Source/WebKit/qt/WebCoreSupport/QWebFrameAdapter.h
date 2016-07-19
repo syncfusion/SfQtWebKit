@@ -226,6 +226,9 @@ public:
 
     QWebPageAdapter* pageAdapter;
 
+	bool repeatTableHeader;
+	bool repeatTableFooter;
+
 // protected:
     bool allowsScrolling;
     int marginWidth;

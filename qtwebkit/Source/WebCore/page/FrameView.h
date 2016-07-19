@@ -437,6 +437,9 @@ public:
     
     void setScrollPinningBehavior(ScrollPinningBehavior);
 
+	//Enable or disable repeated thead/tfoot.
+	bool repeatTableHeader;
+	bool repeatTableFooter;
 protected:
     virtual bool scrollContentsFastPath(const IntSize& scrollDelta, const IntRect& rectToScroll, const IntRect& clipRect);
     virtual void scrollContentsSlowPath(const IntRect& updateRect);
