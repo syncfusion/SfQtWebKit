@@ -1996,6 +1996,15 @@ QSize QWebPage::viewportSize() const
 
     \sa QWebFrame::render(), preferredContentsSize
 */
+void QWebPage::EnableRepeatedHeaderFooter(bool header,bool footer)
+{
+	QWebFrameAdapter* mainFrame = d->mainFrameAdapter();
+	if (!mainFrame->hasView())
+		return;
+	mainFrame->repeatTableHeader = header;
+	mainFrame->repeatTableFooter = footer;
+}
+
 void QWebPage::setViewportSize(const QSize &size) const
 {
     d->m_viewportSize = size;

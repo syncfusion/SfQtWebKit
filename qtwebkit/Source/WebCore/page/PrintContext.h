@@ -81,10 +81,9 @@ public:
     // The height of the graphics context should be
     // (pageSizeInPixels.height() + 1) * number-of-pages - 1
     static void spoolAllPagesWithBoundaries(Frame*, GraphicsContext&, const FloatSize& pageSizeInPixels);
-
+	Vector<IntRect> m_pageRects;
 protected:
     Frame* m_frame;
-    Vector<IntRect> m_pageRects;
 
 private:
     void computePageRectsWithPageSizeInternal(const FloatSize& pageSizeInPixels, bool allowHorizontalTiling);

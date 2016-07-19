@@ -47,19 +47,24 @@ QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFra
 {
 	m_printContext->setElementToDraw(element);
 	renderElement = element;
-    totalPageLayoutSize = m_printContext->begin(pageRect.width(), pageRect.height());
+	float pageHeight = 0;
+	m_printContext->computePageRects(IntRect(pageRect), /* headerHeight 26*/ 0, /* footerHeight 26*/ 0, /* userScaleFactor */ 1.0, pageHeight);
+	IntRect tempRect = m_printContext->m_pageRects[0];
+	totalPageLayoutSize = m_printContext->begin(tempRect.width(), tempRect.height());
+	m_printContext->computePageRects(IntRect(pageRect), /* headerHeight 26*/ 0, /* footerHeight 26*/ 0, /* userScaleFactor */ 1.0, pageHeight);
     printStatus = true;
-    float pageHeight = 0;
-    m_printContext->computePageRects(IntRect(pageRect), /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+	
 }
 QtPrintContext::QtPrintContext(QPainter* painter, const QRect& pageRect, QWebFrameAdapter* frameAdapter, bool status)
     : m_graphicsContext(new GraphicsContext(painter))
     , m_printContext(new PrintContext(frameAdapter->frame))
 {
-    totalPageLayoutSize = m_printContext->begin(pageRect.width(), pageRect.height());
-    printStatus = status;
     float pageHeight = 0;
     m_printContext->computePageRects(IntRect(pageRect), /* headerHeight */ 0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
+	IntRect tempRect = m_printContext->m_pageRects[0];
+	totalPageLayoutSize = m_printContext->begin(tempRect.width(), tempRect.height());
+    printStatus = status;
+    m_printContext->computePageRects(IntRect(pageRect), /* headerHeight */0, /* footerHeight */ 0, /* userScaleFactor */ 1.0, pageHeight);
 }
 QtPrintContext::QtPrintContext(QPainter* painter, QWebFrameAdapter* frameAdapter)
 {
