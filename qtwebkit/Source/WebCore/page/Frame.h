@@ -201,6 +201,7 @@ namespace WebCore {
 
         bool isURLAllowed(const KURL&) const;
 
+		RefPtr<FrameView> m_view;
     // ========
 
     private:
@@ -216,7 +217,6 @@ namespace WebCore {
         mutable NavigationScheduler m_navigationScheduler;
 
         HTMLFrameOwnerElement* m_ownerElement;
-        RefPtr<FrameView> m_view;
         RefPtr<Document> m_doc;
 
         OwnPtr<ScriptController> m_script;

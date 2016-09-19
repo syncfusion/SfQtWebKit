@@ -33,6 +33,7 @@
 #include "RenderTableCol.h"
 #include "RenderTableRow.h"
 #include "RenderView.h"
+#include "FrameView.h"
 #include "StyleInheritedData.h"
 #include <limits>
 #include <wtf/HashSet.h>
@@ -523,6 +524,8 @@ int RenderTableSection::layoutRows(int toAdd, int headHeight, int footHeight)
     LayoutStateMaintainer statePusher(view(), this, locationOffset(), hasTransform() || style()->isFlippedBlocksWritingMode());
 
 	WTF::Vector<int> logicalHeightsForPrinting;
+	if (frame()->m_view->repeatTableHeader || frame()->m_view->repeatTableFooter)
+	{
 	// make sure that rows do not overlap a page break
 	if (view()->layoutState()->pageLogicalHeight()) {
 		logicalHeightsForPrinting.resize(totalRows);
@@ -546,16 +549,22 @@ int RenderTableSection::layoutRows(int toAdd, int headHeight, int footHeight)
 				}
 				m_rowPos[totalRows] += pageOffset;
 			}
+	}
     for (unsigned r = 0; r < totalRows; r++) {
         // Set the row's x/y position and width/height.
         if (RenderTableRow* rowRenderer = m_grid[r].rowRenderer) {
             rowRenderer->setLocation(LayoutPoint(0, m_rowPos[r]));
             rowRenderer->setLogicalWidth(logicalWidth());
+			if (frame()->m_view->repeatTableHeader || frame()->m_view->repeatTableFooter){
 			if (view()->layoutState()->pageLogicalHeight()) {
 				rowRenderer->setLogicalHeight(logicalHeightsForPrinting[r]);
 			}
 			else {
             rowRenderer->setLogicalHeight(m_rowPos[r + 1] - m_rowPos[r] - vspacing);
+			}
+			}
+			else {
+				rowRenderer->setLogicalHeight(m_rowPos[r + 1] - m_rowPos[r] - vspacing);
 			}
             rowRenderer->updateLayerTransform();
         }
@@ -571,8 +580,14 @@ int RenderTableSection::layoutRows(int toAdd, int headHeight, int footHeight)
 
             int rowIndex = cell->rowIndex();
 			int rHeight;
+			if (frame()->m_view->repeatTableHeader || frame()->m_view->repeatTableFooter)
+			{
 			if (view()->layoutState()->pageLogicalHeight() && cell->rowSpan() == 1) {
 				rHeight = logicalHeightsForPrinting[rowIndex];
+			}
+			else {
+				rHeight = m_rowPos[rowIndex + cell->rowSpan()] - m_rowPos[rowIndex] - vspacing;
+			}
 			}
 			else {
 				rHeight = m_rowPos[rowIndex + cell->rowSpan()] - m_rowPos[rowIndex] - vspacing;
