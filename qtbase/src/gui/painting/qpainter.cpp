@@ -5178,7 +5178,6 @@ void QPainter::drawPixmap(const QRectF &r, const QPixmap &pm, const QRectF &sr)
         qreal delta = sw - (pm.width() - sx);
         qreal w_ratio = delta * w/sw;
         sw -= delta;
-        w -= w_ratio;
     }
 
     if (sh + sy > pm.height()) {
