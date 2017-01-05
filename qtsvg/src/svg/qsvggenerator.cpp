@@ -112,6 +112,7 @@ public:
     QPen pen;
     QMatrix matrix;
     QFont font;
+	FILE * pFile;
 
     QString generateGradientName() {
         ++numGradients;
@@ -302,13 +303,13 @@ public:
 
     void generateQtDefaults()
     {
-        *d_func()->stream << QLatin1String("fill=\"none\" ");
-        *d_func()->stream << QLatin1String("stroke=\"black\" ");
-        *d_func()->stream << QLatin1String("stroke-width=\"1\" ");
-        *d_func()->stream << QLatin1String("fill-rule=\"evenodd\" ");
-        *d_func()->stream << QLatin1String("stroke-linecap=\"square\" ");
-        *d_func()->stream << QLatin1String("stroke-linejoin=\"bevel\" ");
-        *d_func()->stream << QLatin1String(">\n");
+		fputs("fill=\"none\" ", d_func()->pFile);
+		fputs("stroke=\"black\" ", d_func()->pFile);
+		fputs("stroke-width=\"1\" ", d_func()->pFile);
+		fputs("fill-rule=\"evenodd\" ", d_func()->pFile);
+		fputs("stroke-linecap=\"square\" ", d_func()->pFile);
+		fputs("stroke-linejoin=\"bevel\" ", d_func()->pFile);
+		fputs(">\n", d_func()->pFile);
     }
     inline QTextStream &stream()
     {
@@ -322,11 +323,20 @@ public:
 
         d_func()->pen = spen;
 
+		QString qstrLatin, wVal;
+		std::string latinString;
+		const char * latinChar;
+		std::string wValString;
+		const char * wValChar;
+
         switch (spen.style()) {
         case Qt::NoPen:
-            stream() << QLatin1String("stroke=\"none\" ");
-
-            d_func()->attributes.stroke = QLatin1String("none");
+			qstrLatin = QLatin1String("stroke=\"none\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+            
+			d_func()->attributes.stroke = QLatin1String("none");
             d_func()->attributes.strokeOpacity = QString();
             return;
             break;
@@ -337,9 +347,34 @@ public:
                             &colorOpacity);
             d_func()->attributes.stroke = color;
             d_func()->attributes.strokeOpacity = colorOpacity;
+			
+			qstrLatin = QLatin1String("stroke=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
 
-            stream() << QLatin1String("stroke=\"")<<color<< QLatin1String("\" ");
-            stream() << QLatin1String("stroke-opacity=\"")<<colorOpacity<< QLatin1String("\" ");
+			latinString = color.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("stroke-opacity=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			latinString = colorOpacity.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			QString qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
         }
             break;
         case Qt::DashLine:
@@ -362,10 +397,62 @@ public:
             d_func()->attributes.dashPattern = dashPattern;
             d_func()->attributes.dashOffset = dashOffset;
 
-            stream() << QLatin1String("stroke=\"")<<color<< QLatin1String("\" ");
-            stream() << QLatin1String("stroke-opacity=\"")<<colorOpacity<< QLatin1String("\" ");
-            stream() << QLatin1String("stroke-dasharray=\"")<<dashPattern<< QLatin1String("\" ");
-            stream() << QLatin1String("stroke-dashoffset=\"")<<dashOffset<< QLatin1String("\" ");
+			qstrLatin = QLatin1String("stroke=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			latinString = color.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("stroke-opacity=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			latinString = colorOpacity.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("stroke-dasharray=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			latinString = dashPattern.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("stroke-dashoffset=\"");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			latinString = dashOffset.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String("\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			fputs(latinChar, d_func()->pFile);
+
             break;
         }
         default:
@@ -373,35 +460,53 @@ public:
             break;
         }
 
-        if (spen.widthF() == 0)
-            stream() <<"stroke-width=\"1\" ";
-        else
-            stream() <<"stroke-width=\"" << spen.widthF() << "\" ";
+		if (spen.widthF() == 0){
+			fputs("stroke-width=\"1\" ", d_func()->pFile);
+		}
+		else{
+			fputs("stroke-width=\"", d_func()->pFile);
+
+			wVal = QString::number(spen.widthF());
+			wValString = wVal.toStdString();
+			wValChar = wValString.c_str();
+
+			fputs(wValChar, d_func()->pFile);
+
+			fputs("\" ", d_func()->pFile);
+		}
 
         switch (spen.capStyle()) {
         case Qt::FlatCap:
-            stream() << "stroke-linecap=\"butt\" ";
+			fputs("stroke-linecap=\"butt\" ", d_func()->pFile);
             break;
         case Qt::SquareCap:
-            stream() << "stroke-linecap=\"square\" ";
+			fputs("stroke-linecap=\"square\" ", d_func()->pFile);
             break;
         case Qt::RoundCap:
-            stream() << "stroke-linecap=\"round\" ";
+			fputs("stroke-linecap=\"round\" ", d_func()->pFile);
             break;
         default:
             qWarning("Unhandled cap style");
         }
+
         switch (spen.joinStyle()) {
         case Qt::SvgMiterJoin:
         case Qt::MiterJoin:
-            stream() << "stroke-linejoin=\"miter\" "
-                        "stroke-miterlimit=\""<<spen.miterLimit()<<"\" ";
+			fputs("stroke-linejoin=\"miter\" ", d_func()->pFile);
+			fputs("stroke-miterlimit=\"", d_func()->pFile);\
+
+			wVal = QString::number(spen.miterLimit());
+			wValString = wVal.toStdString();
+			wValChar = wValString.c_str();
+
+			fputs(wValChar, d_func()->pFile);
+			fputs("\" ", d_func()->pFile);
             break;
         case Qt::BevelJoin:
-            stream() << "stroke-linejoin=\"bevel\" ";
+			fputs("stroke-linejoin=\"bevel\" ", d_func()->pFile);
             break;
         case Qt::RoundJoin:
-            stream() << "stroke-linejoin=\"round\" ";
+			fputs("stroke-linejoin=\"round\" ", d_func()->pFile);
             break;
         default:
             qWarning("Unhandled join style");
@@ -410,13 +515,32 @@ public:
     void qbrushToSvg(const QBrush &sbrush)
     {
         d_func()->brush = sbrush;
+
+		std::string colorString;
+		const char * colorChar;
+
+		QString qstrLatin;
+		std::string latinString;
+		const char * latinChar;
+
         switch (sbrush.style()) {
         case Qt::SolidPattern: {
             QString color, colorOpacity;
             translate_color(sbrush.color(), &color, &colorOpacity);
-            stream() << "fill=\"" << color << "\" "
-                        "fill-opacity=\""
-                     << colorOpacity << "\" ";
+			colorString = color.toStdString();
+			colorChar = colorString.c_str();
+
+			fputs("fill=\"", d_func()->pFile);
+			fputs(colorChar, d_func()->pFile);
+			fputs("\" ", d_func()->pFile);
+			fputs("fill-opacity=\"", d_func()->pFile);
+
+			colorString = colorOpacity.toStdString();
+			colorChar = colorString.c_str();
+
+			fputs(colorChar, d_func()->pFile);
+			fputs("\" ", d_func()->pFile);
+
             d_func()->attributes.fill = color;
             d_func()->attributes.fillOpacity = colorOpacity;
         }
@@ -425,22 +549,74 @@ public:
             saveLinearGradientBrush(sbrush.gradient());
             d_func()->attributes.fill = QString::fromLatin1("url(#%1)").arg(d_func()->currentGradientName);
             d_func()->attributes.fillOpacity = QString();
-            stream() << QLatin1String("fill=\"url(#") << d_func()->currentGradientName << QLatin1String(")\" ");
+
+			colorString = d_func()->currentGradientName.toStdString();
+			colorChar = colorString.c_str();
+
+			qstrLatin = QLatin1String("fill=\"url(#");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
+			fputs(colorChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String(")\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
+
             break;
         case Qt::RadialGradientPattern:
             saveRadialGradientBrush(sbrush.gradient());
             d_func()->attributes.fill = QString::fromLatin1("url(#%1)").arg(d_func()->currentGradientName);
             d_func()->attributes.fillOpacity = QString();
-            stream() << QLatin1String("fill=\"url(#") << d_func()->currentGradientName << QLatin1String(")\" ");
-            break;
+			
+			colorString = d_func()->currentGradientName.toStdString();
+			colorChar = colorString.c_str();
+
+			qstrLatin = QLatin1String("fill=\"url(#");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+			
+			fputs(latinChar, d_func()->pFile);
+			fputs(colorChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String(")\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
+
+			break;
         case Qt::ConicalGradientPattern:
             saveConicalGradientBrush(sbrush.gradient());
             d_func()->attributes.fill = QString::fromLatin1("url(#%1)").arg(d_func()->currentGradientName);
             d_func()->attributes.fillOpacity = QString();
-            stream() << QLatin1String("fill=\"url(#") << d_func()->currentGradientName << QLatin1String(")\" ");
-            break;
+
+			colorString = d_func()->currentGradientName.toStdString();
+			colorChar = colorString.c_str();
+
+			qstrLatin = QLatin1String("fill=\"url(#");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
+			fputs(colorChar, d_func()->pFile);
+
+			qstrLatin = QLatin1String(")\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
+            
+			break;
         case Qt::NoBrush:
-            stream() << QLatin1String("fill=\"none\" ");
+			qstrLatin = QLatin1String("fill=\"none\" ");
+			latinString = qstrLatin.toStdString();
+			latinChar = latinString.c_str();
+
+			fputs(latinChar, d_func()->pFile);
             d_func()->attributes.fill = QLatin1String("none");
             d_func()->attributes.fillOpacity = QString();
             return;
@@ -479,11 +655,35 @@ public:
         d->attributes.font_family = d->font.family();
         d->attributes.font_style = d->font.italic() ? QLatin1String("italic") : QLatin1String("normal");
 
-        *d->stream << "font-family=\"" << d->attributes.font_family << "\" "
-                      "font-size=\"" << d->attributes.font_size << "\" "
-                      "font-weight=\"" << d->attributes.font_weight << "\" "
-                      "font-style=\"" << d->attributes.font_style << "\" "
-                   << endl;
+		fputs("font-family=\"", d->pFile);
+		
+		std::string fontFamily = d->attributes.font_family.toStdString();
+		const char * fontFamilyChar = fontFamily.c_str();
+
+		fputs(fontFamilyChar, d->pFile);
+		fputs("\" ", d->pFile);
+		fputs("font-size=\"", d->pFile);
+
+		fontFamily = d->attributes.font_size.toStdString();
+		fontFamilyChar = fontFamily.c_str();
+		
+		fputs(fontFamilyChar, d->pFile);
+		fputs("\" ", d->pFile);
+		fputs("font-weight=\"", d->pFile);
+
+		fontFamily = d->attributes.font_weight.toStdString();
+		fontFamilyChar = fontFamily.c_str();
+
+		fputs(fontFamilyChar, d->pFile);
+		fputs("\" ", d->pFile);
+		fputs("font-style=\"", d->pFile);
+
+		fontFamily = d->attributes.font_style.toStdString();
+		fontFamilyChar = fontFamily.c_str();
+
+		fputs(fontFamilyChar, d->pFile);
+		fputs("\" ", d->pFile);
+		fputs("\n", d->pFile);
     }
 };
 
@@ -688,6 +888,8 @@ QString QSvgGenerator::fileName() const
     return d->fileName;
 }
 
+QString tempFileName;
+
 void QSvgGenerator::setFileName(const QString &fileName)
 {
     Q_D(QSvgGenerator);
@@ -700,7 +902,7 @@ void QSvgGenerator::setFileName(const QString &fileName)
         delete d->engine->outputDevice();
 
     d->owns_iodevice = true;
-
+	tempFileName = fileName;
     d->fileName = fileName;
     QFile *file = new QFile(fileName);
     d->engine->setOutputDevice(file);
@@ -808,6 +1010,11 @@ int QSvgGenerator::metric(QPaintDevice::PaintDeviceMetric metric) const
 
 bool QSvgPaintEngine::begin(QPaintDevice *)
 {
+
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     Q_D(QSvgPaintEngine);
     if (!d->outputDevice) {
         qWarning("QSvgPaintEngine::begin(), no output device");
@@ -825,44 +1032,60 @@ bool QSvgPaintEngine::begin(QPaintDevice *)
                  qPrintable(d->outputDevice->errorString()));
         return false;
     }
-
+	//QSvgGenerator generator;
+	stdtempString = tempFileName.toStdString();
+	tempChar = stdtempString.c_str();
+	d->pFile = fopen(tempChar, "a+");
     d->stream = new QTextStream(&d->header);
 
     // stream out the header...
-    *d->stream << "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>" << endl << "<svg";
-
+	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg",d->pFile);
     if (d->size.isValid()) {
         qreal wmm = d->size.width() * 25.4 / d->resolution;
         qreal hmm = d->size.height() * 25.4 / d->resolution;
-        *d->stream << " width=\"" << wmm << "mm\" height=\"" << hmm << "mm\"" << endl;
+
+		qtempString = QString::number(wmm);
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(" width=\"", d->pFile);
+		fputs(tempChar, d->pFile);
+
+		qtempString = QString::number(hmm);
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs("mm\" height=\"", d->pFile);
+		fputs(tempChar, d->pFile);
+		fputs("mm\"\n", d->pFile);
     }
 
-    if (d->viewBox.isValid()) {
-        *d->stream << " viewBox=\"" << d->viewBox.left() << ' ' << d->viewBox.top();
-        *d->stream << ' ' << d->viewBox.width() << ' ' << d->viewBox.height() << '\"' << endl;
-    }
-
-    *d->stream << " xmlns=\"http://www.w3.org/2000/svg\""
-                  " xmlns:xlink=\"http://www.w3.org/1999/xlink\" "
-                  " version=\"1.2\" baseProfile=\"tiny\">" << endl;
+	fputs(" xmlns=\"http://www.w3.org/2000/svg\"", d->pFile);
+	fputs(" xmlns:xlink=\"http://www.w3.org/1999/xlink\" ", d->pFile);
+	fputs(" version=\"1.2\" baseProfile=\"tiny\">\n", d->pFile);
 
     if (!d->attributes.document_title.isEmpty()) {
-        *d->stream << "<title>" << d->attributes.document_title << "</title>" << endl;
+		stdtempString = d->attributes.document_title.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs("<title>", d->pFile);
+		fputs(tempChar, d->pFile);
+		fputs("</title>\n", d->pFile);
     }
 
     if (!d->attributes.document_description.isEmpty()) {
-        *d->stream << "<desc>" << d->attributes.document_description << "</desc>" << endl;
+		stdtempString = d->attributes.document_description.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs("<desc>", d->pFile);
+		fputs(tempChar, d->pFile);
+		fputs("</desc>\n", d->pFile);
     }
 
-    d->stream->setString(&d->defs);
-    *d->stream << "<defs>\n";
-
-    d->stream->setString(&d->body);
+	fputs("<defs>\n", d->pFile);
+	fputs("</defs>\n", d->pFile);
     // Start the initial graphics state...
-    *d->stream << "<g ";
+	fputs("<g ", d->pFile);
     generateQtDefaults();
-    *d->stream << endl;
-
+	fputs("\n", d->pFile);
     return true;
 }
 
@@ -870,24 +1093,35 @@ bool QSvgPaintEngine::end()
 {
     Q_D(QSvgPaintEngine);
 
+	std::string stdtempString;
+	const char * tempChar;
+
     d->stream->setString(&d->defs);
-    *d->stream << "</defs>\n";
 
-    d->stream->setDevice(d->outputDevice);
-#ifndef QT_NO_TEXTCODEC
-    d->stream->setCodec(QTextCodec::codecForName("UTF-8"));
-#endif
+	stdtempString = d->header.toStdString();
+	tempChar = stdtempString.c_str();
+	fputs(tempChar, d->pFile);
 
-    *d->stream << d->header;
-    *d->stream << d->defs;
-    *d->stream << d->body;
-    if (d->afterFirstUpdate)
-        *d->stream << "</g>" << endl; // close the updateState
+	stdtempString = d->defs.toStdString();
+	tempChar = stdtempString.c_str();
+	fputs(tempChar, d->pFile);
 
-    *d->stream << "</g>" << endl // close the Qt defaults
-               << "</svg>" << endl;
+	stdtempString = d->body.toStdString();
+	tempChar = stdtempString.c_str();
+	fputs(tempChar, d->pFile);
+
+	if (d->afterFirstUpdate){
+		fputs("</g>\n", d->pFile);
+	}
+	fputs("</g>\n", d->pFile);
+	fputs("</svg>\n", d->pFile);
 
     delete d->stream;
+
+	if (d->pFile != NULL)
+	{
+		fclose(d->pFile);
+	}
 
     return true;
 }
@@ -906,38 +1140,77 @@ void QSvgPaintEngine::drawImage(const QRectF &r, const QImage &image,
 {
     //Q_D(QSvgPaintEngine);
 
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     Q_UNUSED(sr);
     Q_UNUSED(flags);
-    stream() << "<image ";
-    stream() << "x=\""<<r.x()<<"\" "
-                "y=\""<<r.y()<<"\" "
-                "width=\""<<r.width()<<"\" "
-                "height=\""<<r.height()<<"\" "
-                "preserveAspectRatio=\"none\" ";
+
+	qtempString = QString::number(r.x());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+
+	fputs("<image ", d_func()->pFile);
+	fputs("x=\"", d_func()->pFile);
+	fputs(tempChar, d_func()->pFile);
+
+	qtempString = QString::number(r.y());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+
+	fputs("\" ", d_func()->pFile);
+	fputs("y=\"", d_func()->pFile);
+	fputs(tempChar, d_func()->pFile);
+
+	qtempString = QString::number(r.width());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+
+	fputs("\" ", d_func()->pFile);
+	fputs("width=\"", d_func()->pFile);
+	fputs(tempChar, d_func()->pFile);
+
+	qtempString = QString::number(r.height());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+
+	fputs("\" ", d_func()->pFile);
+	fputs("height=\"", d_func()->pFile);
+	fputs(tempChar, d_func()->pFile);
+
+	fputs("\" ", d_func()->pFile);
+	fputs("preserveAspectRatio=\"none\" ", d_func()->pFile);
 
     QByteArray data;
     QBuffer buffer(&data);
     buffer.open(QBuffer::ReadWrite);
     image.save(&buffer, "PNG");
     buffer.close();
-    stream() << "xlink:href=\"data:image/png;base64,"
-             << data.toBase64()
-             <<"\" />\n";
+
+	fputs("xlink:href=\"data:image/png;base64,", d_func()->pFile);
+	fputs(data.toBase64(), d_func()->pFile);
+	fputs("\" />\n", d_func()->pFile);
 }
 
 void QSvgPaintEngine::updateState(const QPaintEngineState &state)
 {
     Q_D(QSvgPaintEngine);
+
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     QPaintEngine::DirtyFlags flags = state.state();
 
     // always stream full gstate, which is not required, but...
     flags |= QPaintEngine::AllDirty;
 
     // close old state and start a new one...
-    if (d->afterFirstUpdate)
-        *d->stream << "</g>\n\n";
+	if (d->afterFirstUpdate)
+		fputs("</g>\n\n", d->pFile);
 
-    *d->stream << "<g ";
+	fputs("<g ", d->pFile);
 
     if (flags & QPaintEngine::DirtyBrush) {
         qbrushToSvg(state.brush());
@@ -949,12 +1222,47 @@ void QSvgPaintEngine::updateState(const QPaintEngineState &state)
 
     if (flags & QPaintEngine::DirtyTransform) {
         d->matrix = state.matrix();
-        *d->stream << "transform=\"matrix(" << d->matrix.m11() << ','
-                   << d->matrix.m12() << ','
-                   << d->matrix.m21() << ',' << d->matrix.m22() << ','
-                   << d->matrix.dx() << ',' << d->matrix.dy()
-                   << ")\""
-                   << endl;
+
+		fputs("transform=\"matrix(", d->pFile);
+		
+		qtempString = QString::number(d->matrix.m11());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs(",", d->pFile);
+
+		qtempString = QString::number(d->matrix.m12());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs(",", d->pFile);
+
+		qtempString = QString::number(d->matrix.m21());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+		
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.m22());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.dx());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.dy());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+		
+		fputs(")\"\n", d->pFile);
     }
 
     if (flags & QPaintEngine::DirtyFont) {
@@ -962,12 +1270,18 @@ void QSvgPaintEngine::updateState(const QPaintEngineState &state)
     }
 
     if (flags & QPaintEngine::DirtyOpacity) {
-        if (!qFuzzyIsNull(state.opacity() - 1))
-            stream() << "opacity=\""<<state.opacity()<<"\" ";
+		if (!qFuzzyIsNull(state.opacity() - 1)){
+			fputs("opacity=\"", d->pFile);
+
+			qtempString = QString::number(state.opacity());
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(tempChar, d->pFile);
+			fputs("\" ", d->pFile);
+		}
     }
-
-    *d->stream << '>' << endl;
-
+	fputs(">\n", d->pFile);
     d->afterFirstUpdate = true;
 }
 
@@ -975,49 +1289,149 @@ void QSvgPaintEngine::drawEllipse(const QRectF &r)
 {
     Q_D(QSvgPaintEngine);
 
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     const bool isCircle = r.width() == r.height();
-    *d->stream << '<' << (isCircle ? "circle" : "ellipse");
-    if (state->pen().isCosmetic())
-        *d->stream << " vector-effect=\"non-scaling-stroke\"";
+
+	fputs("<", d->pFile);
+	fputs((isCircle ? "circle" : "ellipse"), d->pFile);
+
+	if (state->pen().isCosmetic()){
+		fputs(" vector-effect=\"non-scaling-stroke\"", d->pFile);
+	}
     const QPointF c = r.center();
-    *d->stream << " cx=\"" << c.x() << "\" cy=\"" << c.y();
-    if (isCircle)
-        *d->stream << "\" r=\"" << r.width() / qreal(2.0);
-    else
-        *d->stream << "\" rx=\"" << r.width() / qreal(2.0) << "\" ry=\"" << r.height() / qreal(2.0);
-    *d->stream << "\"/>" << endl;
+
+	qtempString = QString::number(c.x());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+	
+	fputs(" cx=\"", d->pFile);
+	fputs(tempChar, d->pFile);
+
+	qtempString = QString::number(c.y());
+	stdtempString = qtempString.toStdString();
+	tempChar = stdtempString.c_str();
+
+	fputs("\" cy=\"", d->pFile);
+	fputs(tempChar, d->pFile);
+
+	if (isCircle){
+		
+		qtempString = QString::number((r.width() / qreal(2.0)));
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		
+		fputs("\" r=\"", d->pFile);
+		fputs(tempChar, d->pFile);
+	}
+	else{
+		qtempString = QString::number((r.width() / qreal(2.0)));
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs("\" rx=\"", d->pFile);
+		fputs(tempChar, d->pFile);
+
+		qtempString = QString::number((r.height() / qreal(2.0)));
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs("\" ry=\"", d->pFile);
+		fputs(tempChar, d->pFile);
+	}
+	fputs("\"/>", d->pFile);
+	fputs("\n", d->pFile);
 }
 
 void QSvgPaintEngine::drawPath(const QPainterPath &p)
 {
     Q_D(QSvgPaintEngine);
 
-    *d->stream << "<path vector-effect=\""
-               << (state->pen().isCosmetic() ? "non-scaling-stroke" : "none")
-               << "\" fill-rule=\""
-               << (p.fillRule() == Qt::OddEvenFill ? "evenodd" : "nonzero")
-               << "\" d=\"";
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
+	fputs("<path vector-effect=\"", d->pFile);
+	fputs((state->pen().isCosmetic() ? "non-scaling-stroke" : "none"), d->pFile);
+	fputs("\" fill-rule=\"", d->pFile);
+	fputs((p.fillRule() == Qt::OddEvenFill ? "evenodd" : "nonzero"), d->pFile);
+	fputs("\" d=\"", d->pFile);
 
     for (int i=0; i<p.elementCount(); ++i) {
         const QPainterPath::Element &e = p.elementAt(i);
         switch (e.type) {
         case QPainterPath::MoveToElement:
-            *d->stream << 'M' << e.x << ',' << e.y;
+			
+			qtempString = QString::number(e.x);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs("M", d->pFile);
+			fputs(tempChar, d->pFile);
+
+			qtempString = QString::number(e.y);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(",", d->pFile);
+			fputs(tempChar, d->pFile);
             break;
         case QPainterPath::LineToElement:
-            *d->stream << 'L' << e.x << ',' << e.y;
+
+			qtempString = QString::number(e.x);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs("L", d->pFile);
+			fputs(tempChar, d->pFile);
+
+			qtempString = QString::number(e.y);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(",", d->pFile);
+			fputs(tempChar, d->pFile);
             break;
         case QPainterPath::CurveToElement:
-            *d->stream << 'C' << e.x << ',' << e.y;
+
+			qtempString = QString::number(e.x);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs("C", d->pFile);
+			fputs(tempChar, d->pFile);
+
+			qtempString = QString::number(e.y);
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(",", d->pFile);
+			fputs(tempChar, d->pFile);
             ++i;
             while (i < p.elementCount()) {
                 const QPainterPath::Element &e = p.elementAt(i);
                 if (e.type != QPainterPath::CurveToDataElement) {
                     --i;
                     break;
-                } else
-                    *d->stream << ' ';
-                *d->stream << e.x << ',' << e.y;
+				}
+				else{
+					fputs(" ", d->pFile);
+				}
+
+				qtempString = QString::number(e.x);
+				stdtempString = qtempString.toStdString();
+				tempChar = stdtempString.c_str();
+
+				fputs(tempChar, d->pFile);
+				fputs(",", d->pFile);
+
+				qtempString = QString::number(e.y);
+				stdtempString = qtempString.toStdString();
+				tempChar = stdtempString.c_str();
+
+				fputs(tempChar, d->pFile);
                 ++i;
             }
             break;
@@ -1025,11 +1439,12 @@ void QSvgPaintEngine::drawPath(const QPainterPath &p)
             break;
         }
         if (i != p.elementCount() - 1) {
-            *d->stream << ' ';
+			fputs(" ", d->pFile);
         }
     }
 
-    *d->stream << "\"/>" << endl;
+	fputs("\"/>", d->pFile);
+	fputs("\n", d->pFile);
 }
 
 void QSvgPaintEngine::drawPolygon(const QPointF *points, int pointCount,
@@ -1039,19 +1454,38 @@ void QSvgPaintEngine::drawPolygon(const QPointF *points, int pointCount,
 
     //Q_D(QSvgPaintEngine);
 
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     QPainterPath path(points[0]);
     for (int i=1; i<pointCount; ++i)
         path.lineTo(points[i]);
 
     if (mode == PolylineMode) {
-        stream() << "<polyline fill=\"none\" vector-effect=\""
-                 << (state->pen().isCosmetic() ? "non-scaling-stroke" : "none")
-                 << "\" points=\"";
+
+		fputs("<polyline fill=\"none\" vector-effect=\"", d_func()->pFile);
+		fputs((state->pen().isCosmetic() ? "non-scaling-stroke" : "none"), d_func()->pFile);
+		fputs("\" points=\"", d_func()->pFile);
+
         for (int i = 0; i < pointCount; ++i) {
             const QPointF &pt = points[i];
-            stream() << pt.x() << ',' << pt.y() << ' ';
+
+			qtempString = QString::number(pt.x());
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(tempChar, d_func()->pFile);
+			fputs(",", d_func()->pFile);
+
+			qtempString = QString::number(pt.y());
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(tempChar, d_func()->pFile);
+			fputs(" ", d_func()->pFile);
         }
-        stream() << "\" />" <<endl;
+		fputs("\" />", d_func()->pFile);
     } else {
         path.closeSubpath();
         drawPath(path);
@@ -1062,20 +1496,53 @@ void QSvgPaintEngine::drawRects(const QRectF *rects, int rectCount)
 {
     Q_D(QSvgPaintEngine);
 
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
     for (int i=0; i < rectCount; ++i) {
         const QRectF &rect = rects[i];
-        *d->stream << "<rect";
-        if (state->pen().isCosmetic())
-            *d->stream << " vector-effect=\"non-scaling-stroke\"";
-        *d->stream << " x=\"" << rect.x() << "\" y=\"" << rect.y()
-                   << "\" width=\"" << rect.width() << "\" height=\"" << rect.height()
-                   << "\"/>" << endl;
+
+		fputs("<rect", d->pFile);
+		if (state->pen().isCosmetic())
+			fputs(" vector-effect=\"non-scaling-stroke\"", d->pFile);
+
+		fputs(" x=\"", d->pFile);
+
+		qtempString = QString::number(rect.x());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs("\" y=\"", d->pFile);
+
+		qtempString = QString::number(rect.y());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs("\" width=\"", d->pFile);
+
+		qtempString = QString::number(rect.width());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs("\" height=\"", d->pFile);
+
+		qtempString = QString::number(rect.height());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs("\"/>\n", d->pFile);
     }
 }
 
 void QSvgPaintEngine::drawTextItem(const QPointF &pt, const QTextItem &textItem)
 {
     Q_D(QSvgPaintEngine);
+
     if (d->pen.style() == Qt::NoPen)
         return;
 
@@ -1084,17 +1551,43 @@ void QSvgPaintEngine::drawTextItem(const QPointF &pt, const QTextItem &textItem)
         QPaintEngine::drawTextItem(pt, ti); // Draw as path
     QString s = QString::fromRawData(ti.chars, ti.num_chars);
 
-    *d->stream << "<text "
-                  "fill=\"" << d->attributes.stroke << "\" "
-                  "fill-opacity=\"" << d->attributes.strokeOpacity << "\" "
-                  "stroke=\"none\" "
-                  "xml:space=\"preserve\" "
-                  "x=\"" << pt.x() << "\" y=\"" << pt.y() << "\" ";
+	QString xVal = QString::number(pt.x());
+	std::string xValString = xVal.toStdString();
+	const char * xValChar = xValString.c_str();
+
+	QString yVal = QString::number(pt.y());
+	std::string yValString = yVal.toStdString();
+	const char * yValChar = yValString.c_str();
+
+	std::string strokeOpacity = d->attributes.strokeOpacity.toStdString();
+	const char * strokeOpacityChar = strokeOpacity.c_str();
+
+	std::string stroke = d->attributes.stroke.toStdString();
+	const char * strokeChar = stroke.c_str();
+
+	fputs("<text ", d->pFile);
+	fputs("fill=\"", d->pFile);
+	fputs(strokeChar, d->pFile);
+	fputs("\" ", d->pFile);
+	fputs("fill-opacity=\"", d->pFile);
+	fputs(strokeOpacityChar, d->pFile);
+	fputs("\" ", d->pFile);
+	fputs("stroke=\"none\" ", d->pFile);
+	fputs("xml:space=\"preserve\" ", d->pFile);
+	fputs("x=\"", d->pFile);
+	fputs(xValChar, d->pFile);
+	fputs("\" y=\"", d->pFile);
+	fputs(yValChar, d->pFile);
+	fputs("\" ", d->pFile);
+
     qfontToSvg(textItem.font());
-    *d->stream << " >"
-               << s.toHtmlEscaped()
-               << "</text>"
-               << endl;
+
+	std::string stdHtmlElapsed = s.toHtmlEscaped().toStdString();
+	const char * htmlElapsed = stdHtmlElapsed.c_str();
+
+	fputs(" >", d->pFile);
+	fputs(htmlElapsed, d->pFile);
+	fputs("</text>\n", d->pFile);
 }
 
 QT_END_NAMESPACE
