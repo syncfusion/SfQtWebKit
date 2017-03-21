@@ -1039,11 +1039,12 @@ bool QSvgPaintEngine::begin(QPaintDevice *)
 	d->pFile = fopen(tempChar, "a+");
     d->stream = new QTextStream(&d->header);
 
+	float pixelToMM = 0.2645833333;
     // stream out the header...
 	fputs("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n<svg",d->pFile);
     if (d->size.isValid()) {
-        qreal wmm = d->size.width() * 25.4 / d->resolution;
-        qreal hmm = d->size.height() * 25.4 / d->resolution;
+		qreal wmm = d->size.width() * pixelToMM;
+		qreal hmm = d->size.height() * pixelToMM;
 
 		qtempString = QString::number(wmm);
 		stdtempString = qtempString.toStdString();
