@@ -160,6 +160,7 @@ public:
     bool begin(QPaintDevice *device) Q_DECL_OVERRIDE;
     bool end() Q_DECL_OVERRIDE;
 
+	void GraphicsState();
     void updateState(const QPaintEngineState &state) Q_DECL_OVERRIDE;
     void popGroup();
 
@@ -1126,6 +1127,98 @@ bool QSvgPaintEngine::end()
     return true;
 }
 
+void QSvgPaintEngine::GraphicsState()
+{
+	Q_D(QSvgPaintEngine);
+
+	QString qtempString;
+	std::string stdtempString;
+	const char * tempChar;
+
+	QPaintEngine::DirtyFlags flags = state->state();
+
+	// always stream full gstate, which is not required, but...
+	flags |= QPaintEngine::AllDirty;
+
+	// close old state and start a new one...
+	if (d->afterFirstUpdate)
+		fputs("</g>\n\n", d->pFile);
+
+	fputs("<g ", d->pFile);
+
+	if (flags & QPaintEngine::DirtyBrush) {
+		qbrushToSvg(state->brush());
+	}
+
+	if (flags & QPaintEngine::DirtyPen) {
+		qpenToSvg(state->pen());
+	}
+
+	if (flags & QPaintEngine::DirtyTransform) {
+		d->matrix = state->matrix();
+
+		fputs("transform=\"matrix(", d->pFile);
+
+		qtempString = QString::number(d->matrix.m11());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs(",", d->pFile);
+
+		qtempString = QString::number(d->matrix.m12());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+
+		fputs(tempChar, d->pFile);
+		fputs(",", d->pFile);
+
+		qtempString = QString::number(d->matrix.m21());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.m22());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.dx());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(",", d->pFile);
+		qtempString = QString::number(d->matrix.dy());
+		stdtempString = qtempString.toStdString();
+		tempChar = stdtempString.c_str();
+		fputs(tempChar, d->pFile);
+
+		fputs(")\"\n", d->pFile);
+	}
+
+	if (flags & QPaintEngine::DirtyFont) {
+		qfontToSvg(state->font());
+	}
+
+	if (flags & QPaintEngine::DirtyOpacity) {
+		if (!qFuzzyIsNull(state->opacity() - 1)){
+			fputs("opacity=\"", d->pFile);
+
+			qtempString = QString::number(state->opacity());
+			stdtempString = qtempString.toStdString();
+			tempChar = stdtempString.c_str();
+
+			fputs(tempChar, d->pFile);
+			fputs("\" ", d->pFile);
+		}
+	}
+	fputs(">\n", d->pFile);
+	d->afterFirstUpdate = true;
+}
+
 void QSvgPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm,
                                  const QRectF &sr)
 {
@@ -1140,6 +1233,7 @@ void QSvgPaintEngine::drawImage(const QRectF &r, const QImage &image,
 {
     //Q_D(QSvgPaintEngine);
 
+	GraphicsState();
 	QString qtempString;
 	std::string stdtempString;
 	const char * tempChar;
@@ -1196,99 +1290,15 @@ void QSvgPaintEngine::drawImage(const QRectF &r, const QImage &image,
 void QSvgPaintEngine::updateState(const QPaintEngineState &state)
 {
     Q_D(QSvgPaintEngine);
-
-	QString qtempString;
-	std::string stdtempString;
-	const char * tempChar;
-
-    QPaintEngine::DirtyFlags flags = state.state();
-
-    // always stream full gstate, which is not required, but...
-    flags |= QPaintEngine::AllDirty;
-
-    // close old state and start a new one...
-	if (d->afterFirstUpdate)
-		fputs("</g>\n\n", d->pFile);
-
-	fputs("<g ", d->pFile);
-
-    if (flags & QPaintEngine::DirtyBrush) {
-        qbrushToSvg(state.brush());
-    }
-
-    if (flags & QPaintEngine::DirtyPen) {
-        qpenToSvg(state.pen());
-    }
-
-    if (flags & QPaintEngine::DirtyTransform) {
-        d->matrix = state.matrix();
-
-		fputs("transform=\"matrix(", d->pFile);
-		
-		qtempString = QString::number(d->matrix.m11());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-
-		fputs(tempChar, d->pFile);
-		fputs(",", d->pFile);
-
-		qtempString = QString::number(d->matrix.m12());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-
-		fputs(tempChar, d->pFile);
-		fputs(",", d->pFile);
-
-		qtempString = QString::number(d->matrix.m21());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-		fputs(tempChar, d->pFile);
-		
-		fputs(",", d->pFile);
-		qtempString = QString::number(d->matrix.m22());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-		fputs(tempChar, d->pFile);
-
-		fputs(",", d->pFile);
-		qtempString = QString::number(d->matrix.dx());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-		fputs(tempChar, d->pFile);
-
-		fputs(",", d->pFile);
-		qtempString = QString::number(d->matrix.dy());
-		stdtempString = qtempString.toStdString();
-		tempChar = stdtempString.c_str();
-		fputs(tempChar, d->pFile);
-		
-		fputs(")\"\n", d->pFile);
-    }
-
-    if (flags & QPaintEngine::DirtyFont) {
-        qfontToSvg(state.font());
-    }
-
-    if (flags & QPaintEngine::DirtyOpacity) {
-		if (!qFuzzyIsNull(state.opacity() - 1)){
-			fputs("opacity=\"", d->pFile);
-
-			qtempString = QString::number(state.opacity());
-			stdtempString = qtempString.toStdString();
-			tempChar = stdtempString.c_str();
-
-			fputs(tempChar, d->pFile);
-			fputs("\" ", d->pFile);
-		}
-    }
-	fputs(">\n", d->pFile);
-    d->afterFirstUpdate = true;
+	if (!d->afterFirstUpdate)
+		GraphicsState();
 }
 
 void QSvgPaintEngine::drawEllipse(const QRectF &r)
 {
     Q_D(QSvgPaintEngine);
 
+	GraphicsState();
 	QString qtempString;
 	std::string stdtempString;
 	const char * tempChar;
@@ -1349,6 +1359,7 @@ void QSvgPaintEngine::drawPath(const QPainterPath &p)
 {
     Q_D(QSvgPaintEngine);
 
+	GraphicsState();
 	QString qtempString;
 	std::string stdtempString;
 	const char * tempChar;
@@ -1454,6 +1465,7 @@ void QSvgPaintEngine::drawPolygon(const QPointF *points, int pointCount,
 
     //Q_D(QSvgPaintEngine);
 
+	GraphicsState();
 	QString qtempString;
 	std::string stdtempString;
 	const char * tempChar;
@@ -1496,6 +1508,7 @@ void QSvgPaintEngine::drawRects(const QRectF *rects, int rectCount)
 {
     Q_D(QSvgPaintEngine);
 
+	GraphicsState();
 	QString qtempString;
 	std::string stdtempString;
 	const char * tempChar;
@@ -1543,6 +1556,7 @@ void QSvgPaintEngine::drawTextItem(const QPointF &pt, const QTextItem &textItem)
 {
     Q_D(QSvgPaintEngine);
 
+	GraphicsState();
     if (d->pen.style() == Qt::NoPen)
         return;
 
