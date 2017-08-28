@@ -323,10 +323,6 @@ QWindowsContextPrivate::QWindowsContextPrivate()
         m_systemInfo |= QWindowsContext::SI_RTL_Extensions;
         m_keyMapper.setUseRTLExtensions(true);
     }
-    if (FAILED(m_oleInitializeResult)) {
-       qWarning() << "QWindowsContext: OleInitialize() failed: "
-           << QWindowsContext::comErrorString(m_oleInitializeResult);
-    }
 }
 
 QWindowsContext::QWindowsContext() :
