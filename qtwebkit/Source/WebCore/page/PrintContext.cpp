@@ -83,7 +83,7 @@ void PrintContext::computePageRects(const FloatRect& printRect, float headerHeig
 	if (renderElement != NULL)
 	{
 		IntRect renderElementBounds = renderElement->pixelSnappedBoundingBox();
-		pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(documentRect.width(), renderElementBounds.height()));
+		pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(renderElementBounds.width(), renderElementBounds.height()));
 	}
 	else
 		pageSize = m_frame->resizePageRectsKeepingRatio(FloatSize(printRect.width(), printRect.height()), FloatSize(documentRect.width(), documentRect.height()));
