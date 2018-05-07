@@ -546,6 +546,19 @@ bool QRawFont::glyphIndexesForChars(const QChar *chars, int numChars, quint32 *g
 
    \sa QTextLine::horizontalAdvance(), QFontMetricsF::width()
 */
+
+void QRawFontPrivate::calcWidthForGlyph(QGlyphLayout *glyphs, qreal emval){
+	float tempwidth = 0.0;
+	  for(int i = 0; i < glyphs->numGlyphs; i++) {
+            unsigned int glyph = glyphs->glyphs[i];
+			QPainterPath path;
+			glyph_metrics_t metric;
+			fontEngine->getUnscaledGlyph(glyph, &path, &metric);
+			tempwidth = ((metric.xoff.toReal()* fontEngine->fontDef.pixelSize) / emval);
+			glyphs->advances[i] = qRound(tempwidth);
+	  }
+}
+
 bool QRawFont::advancesForGlyphIndexes(const quint32 *glyphIndexes, QPointF *advances, int numGlyphs, LayoutFlags layoutFlags) const
 {
     Q_ASSERT(glyphIndexes && advances);
@@ -561,7 +574,7 @@ bool QRawFont::advancesForGlyphIndexes(const quint32 *glyphIndexes, QPointF *adv
 
     bool design = layoutFlags & UseDesignMetrics;
 
-    d->fontEngine->recalcAdvances(&glyphs, design ? QFontEngine::DesignMetrics : QFontEngine::ShaperFlag(0));
+	d->calcWidthForGlyph(&glyphs, unitsPerEm());
     if (layoutFlags & KernedAdvances)
         d->fontEngine->doKerning(&glyphs, design ? QFontEngine::DesignMetrics : QFontEngine::ShaperFlag(0));
 
