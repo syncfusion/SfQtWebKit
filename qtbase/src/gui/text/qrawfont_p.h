@@ -131,6 +131,7 @@ public:
                               QFont::HintingPreference hintingPreference);
 
     static QRawFontPrivate *get(const QRawFont &font) { return font.d.data(); }
+	void calcWidthForGlyph(QGlyphLayout *glyphs, qreal em);
 
     QFontEngine *fontEngine;
     QFont::HintingPreference hintingPreference;
