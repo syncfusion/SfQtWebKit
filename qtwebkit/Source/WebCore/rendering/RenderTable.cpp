@@ -509,7 +509,8 @@ void RenderTable::layout()
 		LayoutUnit height = computedLogicalHeight - totalSectionLogicalHeight;
 		LayoutUnit First = 0;
 		height = max(First, height);
-		section->layoutRows(section == m_firstBody ? height : 0, headHeight, footHeight);
+		// FIXME: Distribute extra height between all table body sections instead of giving it all to the first one.
+		section->layoutRows(section == m_firstBody ? height : 0, section == m_head ? 0 : headHeight, section == m_foot ? 0 : footHeight);
 	}
 
     if (!topSection() && computedLogicalHeight > totalSectionLogicalHeight && !document()->inQuirksMode()) {
