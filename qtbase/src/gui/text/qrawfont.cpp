@@ -551,11 +551,27 @@ void QRawFontPrivate::calcWidthForGlyph(QGlyphLayout *glyphs, qreal emval){
 	float tempwidth = 0.0;
 	  for(int i = 0; i < glyphs->numGlyphs; i++) {
             unsigned int glyph = glyphs->glyphs[i];
+
+			 if (glyph >= widthCacheSize) {
+                int newSize = (glyph + 256) >> 8 << 8;
+                widthCache = q_check_ptr((unsigned char *)realloc(widthCache,
+                            newSize*sizeof(QFixed)));
+                memset(widthCache + widthCacheSize, 0, newSize - widthCacheSize);
+                widthCacheSize = newSize;
+            }
+			glyphs->advances[i] = widthCache[glyph];
+
+			if (glyphs->advances[i].value() == 0) {
 			QPainterPath path;
 			glyph_metrics_t metric;
 			fontEngine->getUnscaledGlyph(glyph, &path, &metric);
 			tempwidth = ((metric.xoff.toReal()* fontEngine->fontDef.pixelSize) / emval);
 			glyphs->advances[i] = qRound(tempwidth);
+
+			// if glyph's within cache range, store it for later
+            if (qRound(tempwidth) > 0 && qRound(tempwidth) < 0x100)
+				widthCache[glyph] = qRound(tempwidth);
+			}
 	  }
 }
 
