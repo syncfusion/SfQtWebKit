@@ -684,7 +684,7 @@ void RenderTable::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffs
 	// re-paint header/footer if table is split over multiple pages
 		if (m_head && view()->repeatTableHeader) {
 		LayoutPoint childPoint = flipForWritingModeForChild(m_head, paintOffset);
-		if (!info.rect.contains(childPoint.x() + m_head->x(), childPoint.y() + m_head->y())) {
+		if (info.rect.y() > childPoint.y() + m_head->y() + m_head->height()) {
 			repaintedHeadPoint = IntPoint(childPoint.x(), info.rect.y() - m_head->y());
 			repaintedHead = true;
 			dynamic_cast<RenderObject*>(m_head)->paint(info, repaintedHeadPoint);
@@ -692,7 +692,7 @@ void RenderTable::paintObject(PaintInfo& paintInfo, const LayoutPoint& paintOffs
 	}
 		if (m_foot && view()->repeatTableFooter) {
 		LayoutPoint childPoint = flipForWritingModeForChild(m_foot, paintOffset);
-		if (!info.rect.contains(childPoint.x() + m_foot->x(), childPoint.y() + m_foot->y())) {
+		if (info.rect.y() + info.rect.height() < childPoint.y() + m_foot->y()) {
 			// find actual end of table on current page
 			int dy = 0;
 			const int max_dy = info.rect.y() + info.rect.height();
