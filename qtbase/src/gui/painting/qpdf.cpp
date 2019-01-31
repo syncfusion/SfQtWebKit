@@ -1283,6 +1283,16 @@ void QPdfEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
   std::string m11Valstring = m11Val.toStdString();
   const char * m11Valchar = m11Valstring.c_str();
 
+  std::string factor = m11Valstring;
+  if(factor == "0")
+  {
+	factor = QString::number(d->stroker.matrix.m12()).toStdString();
+	m11Valchar = factor.c_str();
+  }
+  if(m11Valchar[0] == '-'){
+	factor = factor.substr(1);
+	m11Valchar = factor.c_str();
+  }
   QString dxVal =  QString::number(d->stroker.matrix.dx());
   std::string dxValstring = dxVal.toStdString();
   const char * dxValchar = dxValstring.c_str();
