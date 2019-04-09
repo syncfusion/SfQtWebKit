@@ -1290,10 +1290,6 @@ void QPdfEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
 	factor = QString::number(d->stroker.matrix.m12()).toStdString();
 	m11Valchar = factor.c_str();
   }
-  if(m11Valchar[0] == '-'){
-	factor = factor.substr(1);
-	m11Valchar = factor.c_str();
-  }
   QString dxVal =  QString::number(d->stroker.matrix.dx());
   std::string dxValstring = dxVal.toStdString();
   const char * dxValchar = dxValstring.c_str();
