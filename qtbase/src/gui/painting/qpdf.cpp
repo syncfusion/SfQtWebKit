@@ -1283,6 +1283,12 @@ void QPdfEngine::drawTextItem(const QPointF &p, const QTextItem &textItem)
   std::string m11Valstring = m11Val.toStdString();
   const char * m11Valchar = m11Valstring.c_str();
 
+  //When drawing the rotated text, the "m11Valstring" is zero based on the TX Rotate transformation type. So we have added the condition as if the m11 matrix value is zero, we will consider the factor from m12 matrix value.
+  if(m11Valstring == "0")
+  {
+	m11Valstring = QString::number(d->stroker.matrix.m12()).toStdString();
+	m11Valchar = m11Valstring.c_str();
+  }
   QString dxVal =  QString::number(d->stroker.matrix.dx());
   std::string dxValstring = dxVal.toStdString();
   const char * dxValchar = dxValstring.c_str();
