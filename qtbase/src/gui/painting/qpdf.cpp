@@ -991,6 +991,14 @@ void QPdfEngine::drawRects (const QRectF *rects, int rectCount)
     if (!d->hasPen && !d->hasBrush)
         return;
 
+	//Get factor value for shapes to preserve the form fields.
+	QString m11Val =  QString::number(d->stroker.matrix.m11());
+	std::string m11Valstring = m11Val.toStdString();
+	const char * m11Valchar = m11Valstring.c_str();
+	d->textRegion.append("shape,");
+	d->textRegion.append(m11Valchar);
+	d->textRegion.append("\n");
+
     QBrush penBrush = d->pen.brush();
     if (d->simplePen || !d->hasPen) {
         // draw strokes natively in this case for better output
@@ -1070,6 +1078,13 @@ void QPdfEngine::drawPath (const QPainterPath &p)
             d->brush = b;
         }
     }
+	//Get factor value for shapes to preserve the form fields.
+	QString m11Val =  QString::number(d->stroker.matrix.m11());
+	std::string m11Valstring = m11Val.toStdString();
+	const char * m11Valchar = m11Valstring.c_str();
+	d->textRegion.append("shape,");
+	d->textRegion.append(m11Valchar);
+	d->textRegion.append("\n");
 }
 
 void QPdfEngine::drawPixmap (const QRectF &rectangle, const QPixmap &pixmap, const QRectF &sr)
