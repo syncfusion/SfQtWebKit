@@ -1120,8 +1120,6 @@ bool RenderTableCell::alignTopBottomBorderPaintRect(int& topYOffset, int& bottom
     int bottom = cachedCollapsedBottomBorder(styleForBottomCell).width();
     topYOffset = max<int>(topYOffset, top);
     bottomYOffset = max<int>(bottomYOffset, bottom);
-    if (rowSpan() > 1)
-        return false;
     return true;
 }
 
