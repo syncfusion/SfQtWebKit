@@ -2061,7 +2061,7 @@ void QPdfEnginePrivate::writeTail()
             "%%%%EOF\n",
             xrefPositions.size()-1, info, catalog, xrefPositions.last());
 
-		std::string fileName = outputFileName.toStdString();
+		std::string fileName = outputFileName.toLocal8Bit().constData();
 	    int lastindex = fileName.find_last_of(".");
 	    std::string rawname = fileName.substr(0, lastindex) + ".txt";
 	    const char * textFileName = rawname.c_str();

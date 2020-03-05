@@ -976,7 +976,7 @@ void QWebFrame::print(QPrinter *printer) const
 		m_totalPageLayoutSize = IntRect(m_totalPageLayoutSize.x(), m_totalPageLayoutSize.y(), m_totalPageLayoutSize.width(), elementBounds.height());
 	}
     QString sc = m_str;
-    std::string filePathString = sc.toStdString();
+    std::string filePathString = sc.toLocal8Bit().constData();
     const char * filePath = filePathString.c_str();
     FILE * pFile;
     pFile = fopen (filePath,"a+");
